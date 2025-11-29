@@ -135,6 +135,19 @@
             background-color: rgba(0,0,0,0.05);
         }
 
+        /* 禁用状态样式 */
+        .card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(0.8);
+            pointer-events: none;
+        }
+
+        .card.disabled:hover {
+            transform: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
         @keyframes fadeIn {
             to { opacity: 1; }
         }
@@ -207,15 +220,15 @@
 
 <a href="../home.html" class="back-home">🏠 首页</a>
 
-<div class="breadcrumb">
-    <a href="../home.html">首页</a>
-    <span> / </span>
-    <a href="engineering.html">工科</a>
-    <span> / </span>
-    <a href="computer.html">计算机</a>
-    <span> / </span>
-    <span class="current">大模型算法</span>
-</div>
+    <div class="breadcrumb">
+        <a href="../home.html">首页</a>
+        <span> / </span>
+        <a href="engineering.html">工科</a>
+        <span> / </span>
+        <a href="computer.html">计算机</a>
+        <span> / </span>
+        <span class="current">大模型算法</span>
+    </div>
 
 <header>
     <h1>🤖 大模型算法领域地图</h1>
@@ -224,26 +237,56 @@
 
 <div class="map-grid" id="grid">
     <!-- 卡片将通过 JS 动态生成 -->
-</div>
+    </div>
 
-<script>
+    <script>
     const subjects = [
         {
-            code: "PT", name: "后训练对齐", icon: "🎯",
+            code: "ALIGN", name: "后训练对齐", icon: "🎯",
             desc: "研究大模型的后训练对齐技术，包括RLHF、DPO等方法。",
-            sub: ["RLHF", "DPO", "RLAIF", "过程监督"],
+            sub: ["RLHF", "DPO", "RLAIF", "过程监督", "偏好对齐", "奖励模型", "安全对齐"],
             link: "post-training.html"
         },
         {
-            code: "BM", name: "基础模型研究", icon: "🏗️",
-            desc: "研究大模型的基础架构、训练方法和优化技术。",
-            sub: ["模型架构", "预训练", "优化算法", "多模态"],
+            code: "PT", name: "预训练", icon: "📚",
+            desc: "研究大模型的基础预训练技术和方法。",
+            sub: ["自监督语言建模", "因果语言模型", "掩码语言建模", "多模态预训练", "CLIP", "视觉语言模型", "视频预训练", "音频预训练", "Speech-LM"],
             link: "#"
         },
         {
-            code: "APP", name: "应用研究", icon: "🚀",
-            desc: "研究大模型在各个领域的应用和部署。",
-            sub: ["代码生成", "对话系统", "知识问答", "工具调用"],
+            code: "SFT", name: "监督微调", icon: "🎓",
+            desc: "研究基于指令和示例的模型微调技术。",
+            sub: ["指令微调", "Instruction Tuning", "CoT微调", "CoT SFT", "领域微调", "金融/法律/医学", "多轮对话微调", "对话对齐"],
+            link: "#"
+        },
+        {
+            code: "REASON", name: "推理增强", icon: "🧠",
+            desc: "研究提升大模型推理能力的技术和方法。",
+            sub: ["CoT", "Chain-of-Thought", "Self-Consistency", "Verifier-based Reasoning", "推理RL", "DAPO", "GRPO", "Process Supervision", "思维链推理"],
+            link: "#"
+        },
+        {
+            code: "MLLM", name: "多模态大模型", icon: "🖼️",
+            desc: "研究融合多种模态信息的大模型技术。",
+            sub: ["文本-图像", "VLM", "视觉语言模型", "文本-视频", "VLM-Video", "文本-语音", "文本-3D", "场景理解", "多模态理解"],
+            link: "#"
+        },
+        {
+            code: "TOOL", name: "工具增强模型", icon: "🔧",
+            desc: "研究大模型使用工具和外部资源的能力。",
+            sub: ["RAG", "检索增强生成", "Agent规划", "Toolformer", "Function calling", "工具调用", "API调用", "代码执行", "搜索增强"],
+            link: "#"
+        },
+        {
+            code: "COMPRESS", name: "模型压缩/部署", icon: "📦",
+            desc: "研究大模型的压缩、量化和高效部署技术。",
+            sub: ["蒸馏", "Distillation", "量化", "Quantization", "剪枝", "Pruning", "高效推理", "Speculative decoding", "模型压缩", "边缘部署"],
+            link: "#"
+        },
+        {
+            code: "EVAL", name: "模型评测/评价", icon: "📊",
+            desc: "研究大模型能力的评测方法和评价体系。",
+            sub: ["推理评测", "事实性评测", "安全性评测", "能力覆盖评测", "基准测试", "人工评估", "自动评估", "多维度评测"],
             link: "#"
         }
     ];
@@ -252,8 +295,19 @@
 
     subjects.forEach((sub, index) => {
         const card = document.createElement('a');
-        card.href = sub.link || '#';
-        card.className = 'card';
+        const isClickable = sub.link && sub.link !== '#';
+        
+        if (isClickable) {
+            card.href = sub.link;
+        } else {
+            card.href = '#';
+            card.className = 'card disabled';
+            card.onclick = (e) => e.preventDefault();
+        }
+        
+        if (!card.className) {
+            card.className = 'card';
+        }
         card.style.animationDelay = `${index * 0.05}s`;
 
         const tagsHtml = sub.sub.map(tag => `<span class="tag">${tag}</span>`).join('');
@@ -274,7 +328,7 @@
         grid.appendChild(card);
     });
 
-</script>
+    </script>
 
 </body>
 </html>
