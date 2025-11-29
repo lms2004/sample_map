@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大模型对齐技术演进图谱 (Data Driven)</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        /* --- 样式层：保持暗色科技风 --- */
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0d1117;
+            color: #c9d1d9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 { color: #58a6ff; margin-bottom: 5px; font-size: 24px; }
+        .subtitle { font-size: 14px; color: #8b949e; margin-bottom: 20px; text-align: center; }
+        
+        .chart-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        #chart-container {
+            width: 100%;
+            height: 650px;
+            background: #161b22;
+            border-radius: 12px;
+            border: 1px solid #30363d;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+
+        #loading-msg {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            color: #58a6ff;
+            font-size: 18px;
+            display: none; /* 默认隐藏，JS控制显示 */
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .legend-info {
+            margin-top: 20px;
+            display: flex;
+            gap: 20px;
+            font-size: 13px;
+            color: #8b949e;
+            background: #161b22;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid #30363d;
+        }
+        .legend-info span { font-weight: bold; margin-right: 5px; color: #fff; }
+
+        /* 数据统计信息 */
+        #data-stats {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #8b949e;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 标题区 -->
+    <h1>大模型对齐技术演进图谱</h1>
+    <div class="subtitle">
+        基于科研价值筛选的核心样本点展示<br>
+        X轴：时间 | Y轴：方法效率与影响力
+    </div>
+
+    <!-- 图表容器 -->
+    <div class="chart-wrapper">
+        <div id="chart-container"></div>
+        <div id="loading-msg">正在加载数据...</div>
+    </div>
+
+    <!-- 静态辅助图例 -->
+    <div class="legend-info">
+        <div><span>●</span> 通用对话 (General Chat)</div>
+        <div><span>▲</span> 数学/推理 (Reasoning)</div>
+    </div>
+
+    <!-- 数据统计 -->
+    <div id="data-stats"></div>
+
+    <script>
+        // --- 配置常量 ---
+        const CONFIG = {
+            // 带时间戳参数，避免浏览器缓存 data.json
+            jsonUrl: `./data.json?v=${Date.now()}`,
+            colors: {
+                'RLHF (传统派)': '#e3b341',              // 黄色 - PPO, GPT-4, Llama 2
+                'RLAIF (AI反馈)': '#58a6ff',             // 蓝色 - Claude 系列, Starling
+                'Reasoning / RLVF': '#f85149',           // 红色 - DeepSeek R1, o1, Math models
+                'Direct Alignment (去RL化)': '#3fb950',  // 绿色 - DPO, Llama 3, Qwen
+                'SFT / Distillation': '#a371f7'          // 紫色 - Alpaca, Vicuna, Phi (新增)
+            },
+            shapes: {
+                'general': 'circle',
+                'reasoning': 'triangle'
+            }
+        };
+
+        // --- 初始化 ECharts ---
+        const chartDom = document.getElementById('chart-container');
+        const loadingMsg = document.getElementById('loading-msg'); // 在 ECharts 初始化前获取引用
+        const dataStats = document.getElementById('data-stats');
+        const myChart = echarts.init(chartDom, 'dark'); // ECharts 初始化会清空容器内容
+
+        // --- 核心逻辑函数 ---
+        async function initChart() {
+            try {
+                // 1. 显示 Loading
+                if (loadingMsg) {
+                    loadingMsg.style.display = 'block';
+                }
+
+                // 2. Fetch 加载数据
+                const response = await fetch(CONFIG.jsonUrl);
+                if (!response.ok) throw new Error('网络响应错误');
+                const rawData = await response.json();
+
+                // 3. 数据预处理 (Data Processing)
+                // 我们需要把扁平的 JSON 数组，按 cluster 分组，变成 ECharts 需要的 Series 格式
+                const seriesGroups = {};
+                
+                // 初始化分组
+                Object.keys(CONFIG.colors).forEach(groupName => {
+                    seriesGroups[groupName] = [];
+                });
+
+                // 数据统计
+                const totalCount = rawData.length;
+                let usedCount = 0;
+                let skippedCount = 0;
+
+                // 遍历数据并分类
+                rawData.forEach(item => {
+                    if (!seriesGroups[item.cluster]) {
+                        seriesGroups[item.cluster] = []; // 防止 JSON 里有未定义的新分类
+                    }
+
+                    const dateValue = item.date;
+                    const valueNum = typeof item.value === 'number' ? item.value : Number(item.value);
+
+                    // 基本校验：日期和值必须有效
+                    if (!dateValue || Number.isNaN(new Date(dateValue).getTime()) || Number.isNaN(valueNum)) {
+                        skippedCount++;
+                        console.warn('跳过无效数据点:', item);
+                        return;
+                    }
+
+                    seriesGroups[item.cluster].push({
+                        name: item.name,
+                        value: [dateValue, valueNum], // X, Y 坐标（X 为日期字符串）
+                        symbol: CONFIG.shapes[item.domain] || 'circle', // 形状映射
+                        symbolSize: item.domain === 'reasoning' ? 18 : 14, // 三角形稍微大一点才视觉平衡
+                        // 将所有详细字段存入 customData，供 Tooltip 使用
+                        customData: item 
+                    });
+
+                    usedCount++;
+                });
+
+                console.info(
+                    `对齐图谱: 从 JSON 读取 ${totalCount} 条记录, 成功绘制 ${usedCount} 条, 跳过 ${skippedCount} 条。`
+                );
+
+                if (dataStats) {
+                    dataStats.textContent = `当前展示 ${usedCount} / ${totalCount} 个数据点`;
+                }
+
+                // 4. 构建 Series 配置
+                const seriesList = Object.keys(seriesGroups).map(groupName => ({
+                    name: groupName,
+                    type: 'scatter',
+                    itemStyle: { 
+                        color: CONFIG.colors[groupName] || '#888' // 找不到颜色就用灰色
+                    },
+                    data: seriesGroups[groupName],
+                    markPoint: {
+                        data: [{type: 'max', name: 'Max'}]
+                    }
+                }));
+
+                // 5. 设置图表 Option
+                const option = {
+                    backgroundColor: 'transparent',
+                    tooltip: {
+                        trigger: 'item',
+                        backgroundColor: 'rgba(22, 27, 34, 0.95)',
+                        borderColor: '#30363d',
+                        textStyle: { color: '#c9d1d9' },
+                        padding: 15,
+                        formatter: function (params) {
+                            const info = params.data.customData;
+                            if (!info) return '';
+                            
+                            // 动态生成的 HTML 模板
+                            return `
+                                <div style="font-size: 16px; font-weight: bold; color: ${params.color}; margin-bottom: 5px;">
+                                    ${info.name}
+                                </div>
+                                <div style="font-size: 12px; color: #8b949e; margin-bottom: 10px;">
+                                    📅 ${info.date} &nbsp;|&nbsp; 🏷️ ${info.cluster}
+                                </div>
+                                <div style="border-top: 1px solid #30363d; padding-top: 8px; font-size: 13px;">
+                                    <b style="color:#fff">📌 核心条件 (Representative Conditions):</b><br>
+                                    <span style="color: #d2a8ff;">${info.conditions}</span>
+                                </div>
+                                <div style="margin-top: 8px; font-size: 13px;">
+                                    <b style="color:#fff">📊 实验效果 (Experimental Results):</b><br>
+                                    <span style="color: #7ee787;">${info.result}</span>
+                                </div>
+                            `;
+                        }
+                    },
+                    legend: {
+                        data: Object.keys(seriesGroups), // 自动生成图例
+                        bottom: 10,
+                        textStyle: { color: '#8b949e' }
+                    },
+                    grid: { top: '10%', left: '5%', right: '10%', bottom: '15%', containLabel: true },
+                    xAxis: {
+                        type: 'time',
+                        name: '时间 (Time)',
+                        nameTextStyle: { color: '#8b949e' },
+                        axisLabel: { 
+                            color: '#8b949e', 
+                            formatter: function(value) {
+                                const date = new Date(value);
+                                return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0');
+                            }
+                        },
+                        splitLine: { show: true, lineStyle: { color: '#30363d', type: 'dashed' } }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        name: '科研价值 / 效率 (Value)',
+                        nameTextStyle: { color: '#8b949e' },
+                        axisLabel: { show: false }, // 隐藏具体数值，强调相对性
+                        splitLine: { show: true, lineStyle: { color: '#30363d', opacity: 0.3 } },
+                        min: 2, max: 11
+                    },
+                    series: seriesList
+                };
+
+                // 渲染
+                myChart.setOption(option);
+                if (loadingMsg) {
+                    loadingMsg.style.display = 'none';
+                }
+
+            } catch (error) {
+                console.error('数据加载错误:', error);
+                let errorMsg = '数据加载失败: ' + error.message;
+                if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
+                    errorMsg += '<br><br>提示：请使用本地服务器运行（如 Python: python -m http.server 或 VS Code Live Server）';
+                }
+                if (loadingMsg) {
+                    loadingMsg.innerHTML = errorMsg;
+                    loadingMsg.style.color = '#f85149';
+                    loadingMsg.style.display = 'block';
+                }
+            }
+        }
+
+        // --- 启动 ---
+        initChart();
+
+        // 响应窗口大小变化
+        window.addEventListener('resize', () => myChart.resize());
+
+    </script>
+</body>
+</html>
