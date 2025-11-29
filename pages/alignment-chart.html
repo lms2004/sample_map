@@ -165,17 +165,42 @@
 
         .verification-levels {
             display: flex;
-            gap: 15px;
+            flex-direction: column;
+            gap: 10px;
             margin-top: 10px;
         }
 
+        .verification-level-item {
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f6f8fa;
+        }
+
         .verification-badge {
-            padding: 8px 16px;
-            border-radius: 20px;
+            padding: 12px 20px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
-            border: 2px solid;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+
+        .verification-badge-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .verification-expand-icon {
+            font-size: 14px;
+            transition: transform 0.3s;
+        }
+
+        .verification-badge.expanded .verification-expand-icon {
+            transform: rotate(90deg);
         }
 
         .verification-badge.level-a {
@@ -197,8 +222,30 @@
         }
 
         .verification-badge:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            background: rgba(0,0,0,0.05);
+        }
+
+        .verification-badge.level-a:hover {
+            background: #c8f4d3;
+        }
+
+        .verification-badge.level-b:hover {
+            background: #fff3b5;
+        }
+
+        .verification-badge.level-c:hover {
+            background: #ffe0dd;
+        }
+
+        .verification-experiments-list {
+            display: none;
+            padding: 15px;
+            background: white;
+            border-top: 1px solid #d0d7de;
+        }
+
+        .verification-experiments-list.active {
+            display: block;
         }
 
         .verification-count {
@@ -387,6 +434,7 @@
         let currentTheme = 'light';
         let lastOption = null;
         let allData = []; // 存储所有数据用于查找相似点
+        let verificationData = {}; // 存储验证实验数据
 
         // --- 初始化 ECharts ---
         const chartDom = document.getElementById('chart-container');
@@ -420,21 +468,24 @@
             };
         }
 
-        // 查找相似数据点（基于cluster和domain）
+        // 查找基于相同实验条件复现的数据点
         function findSimilarPoints(currentItem, allData) {
+            // 基于相同的实验条件（conditions）查找复现实验
             return allData
                 .filter(item => 
                     item.id !== currentItem.id && 
-                    (item.cluster === currentItem.cluster || item.domain === currentItem.domain)
+                    item.conditions === currentItem.conditions
                 )
-                .slice(0, 5) // 最多返回5个相似点
+                .slice(0, 10) // 最多返回10个复现实验点
                 .map(item => ({
                     id: item.id,
                     name: item.name,
                     date: item.date,
                     cluster: item.cluster,
                     domain: item.domain,
-                    value: item.value
+                    value: item.value,
+                    conditions: item.conditions,
+                    result: item.result
                 }));
         }
 
@@ -445,10 +496,21 @@
                     loadingMsg.style.display = 'block';
                 }
 
+                // 加载原始数据
                 const response = await fetch(CONFIG.jsonUrl);
                 if (!response.ok) throw new Error('网络响应错误');
                 const rawData = await response.json();
                 allData = rawData; // 保存所有数据
+                
+                // 加载验证实验数据
+                try {
+                    const verificationResponse = await fetch(`../verification-data.json?v=${Date.now()}`);
+                    if (verificationResponse.ok) {
+                        verificationData = await verificationResponse.json();
+                    }
+                } catch (e) {
+                    console.warn('验证实验数据加载失败，将使用模拟数据:', e);
+                }
 
                 const seriesGroups = {};
                 
@@ -597,7 +659,7 @@
                 // 添加点击事件监听
                 myChart.on('click', function(params) {
                     if (params.data && params.data.customData) {
-                        showDetailModal(params.data.customData);
+                        _showDetailModalInternal(params.data.customData);
                     }
                 });
                 
@@ -656,10 +718,10 @@
             });
         }
 
-        // 显示详情模态框
-        function showDetailModal(item) {
+        // 显示详情模态框（内部函数）
+        async function _showDetailModalInternal(item) {
             const verification = generateVerificationData(item);
-            const similarPoints = findSimilarPoints(item, allData);
+            const similarPoints = await findSimilarPoints(item, allData);
             
             document.getElementById('modal-title').textContent = item.name;
             
@@ -686,6 +748,28 @@
                     <div class="section-title">📊 实验效果</div>
                     <div class="section-content">
                         <p>${item.result}</p>
+                        ${item.experimentDetails ? `
+                            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #d0d7de;">
+                                <strong>实验详情:</strong>
+                                <ul style="margin-top: 8px; padding-left: 20px;">
+                                    <li>超参数: ${item.experimentDetails.hyperparameters}</li>
+                                    <li>训练日志: ${item.experimentDetails.trainingLog}</li>
+                                    <li>数据集: ${item.experimentDetails.dataset}</li>
+                                    <li>硬件: ${item.experimentDetails.hardware}</li>
+                                    <li>训练时间: ${item.experimentDetails.trainingTime}</li>
+                                </ul>
+                            </div>
+                        ` : ''}
+                        ${item.metrics ? `
+                            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #d0d7de;">
+                                <strong>性能指标:</strong>
+                                <ul style="margin-top: 8px; padding-left: 20px;">
+                                    <li>性能: ${item.metrics.performance}</li>
+                                    <li>准确性: ${item.metrics.accuracy}</li>
+                                    <li>效率: ${item.metrics.efficiency}</li>
+                                </ul>
+                            </div>
+                        ` : ''}
                     </div>
                 </div>
 
@@ -716,22 +800,45 @@
                 <div class="detail-section">
                     <div class="section-title">🎯 分级验证</div>
                     <div class="section-content">
-                        <p style="margin-bottom: 15px;">点击等级查看验证实验内容列表：</p>
+                        <p style="margin-bottom: 10px; font-size: 13px; color: #57606a;">
+                            <strong>验证级别说明：</strong><br>
+                            • <strong>A级</strong>：完整实验（包含完整代码和实验细节）<br>
+                            • <strong>B级</strong>：实验代码不全<br>
+                            • <strong>C级</strong>：仅公布实验指标
+                        </p>
+                        <p style="margin-bottom: 15px; margin-top: 15px;">点击等级展开查看基于相同实验条件的复现实验列表：</p>
                         <div class="verification-levels">
-                            <div class="verification-badge level-a" data-level="A" data-count="${verification.counts.A}">
-                                A级验证
-                                <span class="verification-count">(${verification.counts.A}人)</span>
+                            <div class="verification-level-item">
+                                <div class="verification-badge level-a" data-level="A" data-count="${verification.counts.A}">
+                                    <div class="verification-badge-header">
+                                        <span class="verification-expand-icon">▶</span>
+                                        <span>A级验证</span>
+                                        <span class="verification-count">(${verification.counts.A}人)</span>
+                                    </div>
+                                </div>
+                                <div class="verification-experiments-list" id="level-a-experiments"></div>
                             </div>
-                            <div class="verification-badge level-b" data-level="B" data-count="${verification.counts.B}">
-                                B级验证
-                                <span class="verification-count">(${verification.counts.B}人)</span>
+                            <div class="verification-level-item">
+                                <div class="verification-badge level-b" data-level="B" data-count="${verification.counts.B}">
+                                    <div class="verification-badge-header">
+                                        <span class="verification-expand-icon">▶</span>
+                                        <span>B级验证</span>
+                                        <span class="verification-count">(${verification.counts.B}人)</span>
+                                    </div>
+                                </div>
+                                <div class="verification-experiments-list" id="level-b-experiments"></div>
                             </div>
-                            <div class="verification-badge level-c" data-level="C" data-count="${verification.counts.C}">
-                                C级验证
-                                <span class="verification-count">(${verification.counts.C}人)</span>
+                            <div class="verification-level-item">
+                                <div class="verification-badge level-c" data-level="C" data-count="${verification.counts.C}">
+                                    <div class="verification-badge-header">
+                                        <span class="verification-expand-icon">▶</span>
+                                        <span>C级验证</span>
+                                        <span class="verification-count">(${verification.counts.C}人)</span>
+                                    </div>
+                                </div>
+                                <div class="verification-experiments-list" id="level-c-experiments"></div>
                             </div>
                         </div>
-                        <div id="similar-points-list" class="similar-points-list"></div>
                     </div>
                 </div>
 
@@ -742,6 +849,12 @@
                             📄 论文链接: ${item.paper}
                         </a>
                         <br><br>
+                        ${item.codeUrl ? `
+                            <a href="${item.codeUrl}" target="_blank" class="link-item">
+                                💻 验证实验代码: ${item.codeUrl}
+                            </a>
+                            <br><br>
+                        ` : ''}
                         <a href="https://github.com/search?q=${encodeURIComponent(item.name)}" target="_blank" class="link-item">
                             💻 GitHub 代码库
                         </a>
@@ -753,51 +866,82 @@
                 </div>
             `;
             
-            // 绑定验证等级点击事件
+            // 渲染每个级别的验证实验列表
+            renderVerificationLevels(similarPoints, item);
+            
+            // 绑定验证等级点击事件（展开/收起）
             document.querySelectorAll('.verification-badge').forEach(badge => {
                 badge.addEventListener('click', function() {
                     const level = this.dataset.level;
-                    const count = this.dataset.count;
-                    showSimilarPoints(level, count, similarPoints, item);
+                    const levelItem = this.closest('.verification-level-item');
+                    const experimentsList = levelItem.querySelector('.verification-experiments-list');
+                    
+                    // 切换展开/收起
+                    this.classList.toggle('expanded');
+                    experimentsList.classList.toggle('active');
                 });
             });
             
             detailModal.classList.add('active');
         }
 
-        // 显示相似点列表
-        function showSimilarPoints(level, count, similarPoints, currentItem) {
-            const listContainer = document.getElementById('similar-points-list');
+        // 渲染所有级别的验证实验列表
+        function renderVerificationLevels(similarPoints, currentItem) {
+            const levelDescriptions = {
+                'A': '完整实验（包含完整代码和实验细节）',
+                'B': '实验代码不全',
+                'C': '仅公布实验指标'
+            };
             
-            if (similarPoints.length === 0) {
-                listContainer.innerHTML = `<p style="color: #57606a; padding: 15px;">暂无${level}级验证的相似实验数据点</p>`;
-            } else {
-                listContainer.innerHTML = `
-                    <div style="margin-bottom: 10px; font-weight: 600; color: #24292f;">
-                        ${level}级验证 (${count}人验证) - 相似实验点列表:
-                    </div>
-                    ${similarPoints.map((point, idx) => `
-                        <div class="similar-point-item" data-point-idx="${idx}">
-                            <div class="similar-point-name">${point.name}</div>
-                            <div class="similar-point-desc">
-                                ${point.date} | ${point.cluster} | 价值: ${point.value}
-                            </div>
-                        </div>
-                    `).join('')}
-                `;
+            const levels = ['A', 'B', 'C'];
+            
+            levels.forEach(level => {
+                const listContainer = document.getElementById(`level-${level.toLowerCase()}-experiments`);
+                const filteredPoints = similarPoints.filter(p => p.verificationLevel === level);
                 
-                // 绑定点击事件
-                listContainer.querySelectorAll('.similar-point-item').forEach((item, idx) => {
-                    item.addEventListener('click', function() {
-                        const point = similarPoints[idx];
-                        // 从allData中找到完整数据
-                        const fullItem = allData.find(d => d.id === point.id) || point;
-                        showDetailModal(fullItem);
+                if (filteredPoints.length === 0) {
+                    listContainer.innerHTML = `
+                        <p style="color: #57606a; padding: 10px; font-size: 13px;">
+                            暂无${level}级验证的复现实验<br>
+                            <small style="color: #8b949e;">（${levelDescriptions[level]}）</small>
+                        </p>
+                    `;
+                } else {
+                    listContainer.innerHTML = `
+                        <div style="margin-bottom: 10px; font-size: 12px; color: #57606a;">
+                            ${levelDescriptions[level]} | 实验条件: ${currentItem.conditions}
+                        </div>
+                        ${filteredPoints.map((point, idx) => `
+                            <div class="similar-point-item" data-point-idx="${idx}">
+                                <div class="similar-point-name">${point.name}</div>
+                                <div class="similar-point-desc">
+                                    ${point.date} | ${point.cluster} | 价值: ${point.value}
+                                </div>
+                                <div style="font-size: 12px; color: #8b949e; margin-top: 4px;">
+                                    复现结果: ${point.result || '待验证'}
+                                </div>
+                                ${point.codeUrl ? `<div style="font-size: 11px; color: #0969da; margin-top: 2px;">🔗 代码: ${point.codeUrl}</div>` : ''}
+                                ${point.experimentDetails ? `
+                                    <div style="font-size: 11px; color: #57606a; margin-top: 4px;">
+                                        📋 超参数: ${point.experimentDetails.hyperparameters} | 
+                                        训练日志: ${point.experimentDetails.trainingLog} | 
+                                        硬件: ${point.experimentDetails.hardware || '未说明'}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `).join('')}
+                    `;
+                    
+                    // 绑定点击事件
+                    listContainer.querySelectorAll('.similar-point-item').forEach((item, idx) => {
+                        item.addEventListener('click', async function() {
+                            const point = filteredPoints[idx];
+                            // 验证实验数据已经是完整的，直接使用
+                            await _showDetailModalInternal(point);
+                        });
                     });
-                });
-            }
-            
-            listContainer.classList.add('active');
+                }
+            });
         }
 
         // 关闭模态框
@@ -829,7 +973,7 @@
         window.showDetailModal = function(item) {
             // 从allData中找到完整数据
             const fullItem = allData.find(d => d.id === item.id) || item;
-            showDetailModal(fullItem);
+            _showDetailModalInternal(fullItem);
         };
 
         // --- 启动 ---
