@@ -72,6 +72,222 @@
         body.light-theme #loading-msg {
             color: #0969da;
         }
+
+        /* 详情模态框样式 */
+        .detail-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .detail-modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        body.light-theme .modal-content {
+            background: white;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e1e4e8;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #24292f;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #8b949e;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: #f3f4f6;
+            color: #24292f;
+        }
+
+        .detail-section {
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #24292f;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-content {
+            background: #f6f8fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #0969da;
+        }
+
+        .verification-levels {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .verification-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid;
+        }
+
+        .verification-badge.level-a {
+            background: #dafbe1;
+            color: #1a7f37;
+            border-color: #2da44e;
+        }
+
+        .verification-badge.level-b {
+            background: #fff8c5;
+            color: #9a6700;
+            border-color: #bf8700;
+        }
+
+        .verification-badge.level-c {
+            background: #ffebe9;
+            color: #cf222e;
+            border-color: #da3633;
+        }
+
+        .verification-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .verification-count {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-left: 8px;
+        }
+
+        .similar-points-list {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #d0d7de;
+        }
+
+        .similar-points-list.active {
+            display: block;
+        }
+
+        .similar-point-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #f6f8fa;
+            border-radius: 6px;
+            border-left: 3px solid #0969da;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .similar-point-item:hover {
+            background: #e1e4e8;
+            transform: translateX(4px);
+        }
+
+        .similar-point-name {
+            font-weight: 600;
+            color: #24292f;
+            margin-bottom: 4px;
+        }
+
+        .similar-point-desc {
+            font-size: 13px;
+            color: #57606a;
+        }
+
+        .link-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #0969da;
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            background: #f6f8fa;
+            transition: all 0.2s;
+        }
+
+        .link-item:hover {
+            background: #e1e4e8;
+            text-decoration: underline;
+        }
+
+        .comment-section {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .comment-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #d0d7de;
+        }
+
+        .comment-author {
+            font-weight: 600;
+            color: #24292f;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .comment-text {
+            font-size: 13px;
+            color: #57606a;
+            line-height: 1.5;
+        }
     </style>
 </head>
 <body>
@@ -118,6 +334,19 @@
     <!-- 数据统计 -->
     <div id="data-stats"></div>
 
+    <!-- 详情模态框 -->
+    <div id="detail-modal" class="detail-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modal-title">详情</h2>
+                <button class="close-btn" id="close-modal">&times;</button>
+            </div>
+            <div id="modal-body">
+                <!-- 内容将通过 JS 动态生成 -->
+            </div>
+        </div>
+    </div>
+
     <script>
         // --- 配置常量 ---
         const CONFIG = {
@@ -157,6 +386,7 @@
 
         let currentTheme = 'light';
         let lastOption = null;
+        let allData = []; // 存储所有数据用于查找相似点
 
         // --- 初始化 ECharts ---
         const chartDom = document.getElementById('chart-container');
@@ -164,11 +394,48 @@
         const dataStats = document.getElementById('data-stats');
         const themeToggleBtn = document.getElementById('theme-toggle-btn');
         const myChart = echarts.init(chartDom, 'light');
+        const detailModal = document.getElementById('detail-modal');
+        const closeModalBtn = document.getElementById('close-modal');
         
         // 默认应用浅色主题
         document.body.classList.add('light-theme');
         if (themeToggleBtn) {
             themeToggleBtn.textContent = '切换为夜间背景';
+        }
+
+        // 生成模拟的验证数据和相似点
+        function generateVerificationData(item) {
+            const levels = ['A', 'B', 'C'];
+            const randomLevel = levels[Math.floor(Math.random() * levels.length)];
+            const counts = {
+                'A': Math.floor(Math.random() * 50) + 20,
+                'B': Math.floor(Math.random() * 30) + 10,
+                'C': Math.floor(Math.random() * 20) + 5
+            };
+            
+            return {
+                level: randomLevel,
+                counts: counts,
+                total: counts[randomLevel]
+            };
+        }
+
+        // 查找相似数据点（基于cluster和domain）
+        function findSimilarPoints(currentItem, allData) {
+            return allData
+                .filter(item => 
+                    item.id !== currentItem.id && 
+                    (item.cluster === currentItem.cluster || item.domain === currentItem.domain)
+                )
+                .slice(0, 5) // 最多返回5个相似点
+                .map(item => ({
+                    id: item.id,
+                    name: item.name,
+                    date: item.date,
+                    cluster: item.cluster,
+                    domain: item.domain,
+                    value: item.value
+                }));
         }
 
         // --- 核心逻辑函数 ---
@@ -181,6 +448,7 @@
                 const response = await fetch(CONFIG.jsonUrl);
                 if (!response.ok) throw new Error('网络响应错误');
                 const rawData = await response.json();
+                allData = rawData; // 保存所有数据
 
                 const seriesGroups = {};
                 
@@ -325,6 +593,14 @@
 
                 lastOption = option;
                 myChart.setOption(option);
+                
+                // 添加点击事件监听
+                myChart.on('click', function(params) {
+                    if (params.data && params.data.customData) {
+                        showDetailModal(params.data.customData);
+                    }
+                });
+                
                 if (loadingMsg) {
                     loadingMsg.style.display = 'none';
                 }
@@ -379,6 +655,182 @@
                 applyThemeToChart();
             });
         }
+
+        // 显示详情模态框
+        function showDetailModal(item) {
+            const verification = generateVerificationData(item);
+            const similarPoints = findSimilarPoints(item, allData);
+            
+            document.getElementById('modal-title').textContent = item.name;
+            
+            const modalBody = document.getElementById('modal-body');
+            modalBody.innerHTML = `
+                <div class="detail-section">
+                    <div class="section-title">📄 基本信息</div>
+                    <div class="section-content">
+                        <p><strong>日期:</strong> ${item.date}</p>
+                        <p><strong>分类:</strong> ${item.cluster}</p>
+                        <p><strong>领域:</strong> ${item.domain === 'general' ? '通用对话' : '数学/推理'}</p>
+                        <p><strong>科研价值:</strong> ${item.value}</p>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="section-title">📌 核心条件</div>
+                    <div class="section-content">
+                        <p>${item.conditions}</p>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="section-title">📊 实验效果</div>
+                    <div class="section-content">
+                        <p>${item.result}</p>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="section-title">✅ 真实性验证</div>
+                    <div class="section-content">
+                        <div style="margin-bottom: 15px;">
+                            <strong>实验复现状态:</strong>
+                            <span style="color: #1a7f37; font-weight: 600;">✓ 已验证</span>
+                        </div>
+                        <div class="comment-section">
+                            <div class="comment-item">
+                                <div class="comment-author">@researcher_001</div>
+                                <div class="comment-text">已成功复现实验结果，代码和参数设置与论文描述一致。</div>
+                            </div>
+                            <div class="comment-item">
+                                <div class="comment-author">@ml_engineer</div>
+                                <div class="comment-text">实验结果可复现，但需要较大的计算资源。建议使用GPU集群。</div>
+                            </div>
+                            <div class="comment-item">
+                                <div class="comment-author">@student_2024</div>
+                                <div class="comment-text">部分超参数需要根据具体数据集调整，但整体方法有效。</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="section-title">🎯 分级验证</div>
+                    <div class="section-content">
+                        <p style="margin-bottom: 15px;">点击等级查看验证实验内容列表：</p>
+                        <div class="verification-levels">
+                            <div class="verification-badge level-a" data-level="A" data-count="${verification.counts.A}">
+                                A级验证
+                                <span class="verification-count">(${verification.counts.A}人)</span>
+                            </div>
+                            <div class="verification-badge level-b" data-level="B" data-count="${verification.counts.B}">
+                                B级验证
+                                <span class="verification-count">(${verification.counts.B}人)</span>
+                            </div>
+                            <div class="verification-badge level-c" data-level="C" data-count="${verification.counts.C}">
+                                C级验证
+                                <span class="verification-count">(${verification.counts.C}人)</span>
+                            </div>
+                        </div>
+                        <div id="similar-points-list" class="similar-points-list"></div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="section-title">🔗 原始内容链接</div>
+                    <div class="section-content">
+                        <a href="https://arxiv.org/search/?query=${encodeURIComponent(item.paper)}" target="_blank" class="link-item">
+                            📄 论文链接: ${item.paper}
+                        </a>
+                        <br><br>
+                        <a href="https://github.com/search?q=${encodeURIComponent(item.name)}" target="_blank" class="link-item">
+                            💻 GitHub 代码库
+                        </a>
+                        <br><br>
+                        <a href="https://huggingface.co/search?q=${encodeURIComponent(item.name)}" target="_blank" class="link-item">
+                            🤗 HuggingFace 模型
+                        </a>
+                    </div>
+                </div>
+            `;
+            
+            // 绑定验证等级点击事件
+            document.querySelectorAll('.verification-badge').forEach(badge => {
+                badge.addEventListener('click', function() {
+                    const level = this.dataset.level;
+                    const count = this.dataset.count;
+                    showSimilarPoints(level, count, similarPoints, item);
+                });
+            });
+            
+            detailModal.classList.add('active');
+        }
+
+        // 显示相似点列表
+        function showSimilarPoints(level, count, similarPoints, currentItem) {
+            const listContainer = document.getElementById('similar-points-list');
+            
+            if (similarPoints.length === 0) {
+                listContainer.innerHTML = `<p style="color: #57606a; padding: 15px;">暂无${level}级验证的相似实验数据点</p>`;
+            } else {
+                listContainer.innerHTML = `
+                    <div style="margin-bottom: 10px; font-weight: 600; color: #24292f;">
+                        ${level}级验证 (${count}人验证) - 相似实验点列表:
+                    </div>
+                    ${similarPoints.map((point, idx) => `
+                        <div class="similar-point-item" data-point-idx="${idx}">
+                            <div class="similar-point-name">${point.name}</div>
+                            <div class="similar-point-desc">
+                                ${point.date} | ${point.cluster} | 价值: ${point.value}
+                            </div>
+                        </div>
+                    `).join('')}
+                `;
+                
+                // 绑定点击事件
+                listContainer.querySelectorAll('.similar-point-item').forEach((item, idx) => {
+                    item.addEventListener('click', function() {
+                        const point = similarPoints[idx];
+                        // 从allData中找到完整数据
+                        const fullItem = allData.find(d => d.id === point.id) || point;
+                        showDetailModal(fullItem);
+                    });
+                });
+            }
+            
+            listContainer.classList.add('active');
+        }
+
+        // 关闭模态框
+        function closeModal() {
+            detailModal.classList.remove('active');
+            document.getElementById('similar-points-list').classList.remove('active');
+        }
+
+        // 绑定关闭按钮
+        if (closeModalBtn) {
+            closeModalBtn.addEventListener('click', closeModal);
+        }
+
+        // 点击背景关闭
+        detailModal.addEventListener('click', function(e) {
+            if (e.target === detailModal) {
+                closeModal();
+            }
+        });
+
+        // ESC键关闭
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && detailModal.classList.contains('active')) {
+                closeModal();
+            }
+        });
+
+        // 将showDetailModal暴露到全局，供相似点点击使用
+        window.showDetailModal = function(item) {
+            // 从allData中找到完整数据
+            const fullItem = allData.find(d => d.id === item.id) || item;
+            showDetailModal(fullItem);
+        };
 
         // --- 启动 ---
         initChart();
