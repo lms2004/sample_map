@@ -1,0 +1,123 @@
+[
+  {
+    "id": "heartrate_2024_01_15",
+    "name": "心率记录 - 2024-01-15",
+    "date": "2024-01-15",
+    "value": 72,
+    "cluster": "静息心率",
+    "domain": "health",
+    "conditions": "运动后30分钟",
+    "result": "静息心率正常，运动恢复良好",
+    "source": "手环记录",
+    "sourceUrl": ""
+  },
+  {
+    "id": "heartrate_2024_01_16",
+    "name": "心率记录 - 2024-01-16",
+    "date": "2024-01-16",
+    "value": 68,
+    "cluster": "静息心率",
+    "domain": "health",
+    "conditions": "晨起测量",
+    "result": "静息心率正常，睡眠质量良好",
+    "source": "手环记录",
+    "sourceUrl": ""
+  },
+  {
+    "id": "heartrate_2024_01_17",
+    "name": "心率记录 - 2024-01-17",
+    "date": "2024-01-17",
+    "value": 75,
+    "cluster": "静息心率",
+    "domain": "health",
+    "conditions": "运动后1小时",
+    "result": "心率略高，可能因运动强度较大",
+    "source": "手环记录",
+    "sourceUrl": ""
+  },
+  {
+    "id": "heartrate_2024_01_18",
+    "name": "心率记录 - 2024-01-18",
+    "date": "2024-01-18",
+    "value": 70,
+    "cluster": "静息心率",
+    "domain": "health",
+    "conditions": "午休后测量",
+    "result": "静息心率正常",
+    "source": "手环记录",
+    "sourceUrl": ""
+  },
+  {
+    "id": "heartrate_2024_01_19",
+    "name": "心率记录 - 2024-01-19",
+    "date": "2024-01-19",
+    "value": 85,
+    "cluster": "运动心率",
+    "domain": "health",
+    "conditions": "慢跑中",
+    "result": "有氧运动心率区间，运动强度适中",
+    "source": "手环记录",
+    "sourceUrl": ""
+  },
+  {
+    "id": "heartrate_2024_01_20",
+    "name": "心率记录 - 2024-01-20",
+    "date": "2024-01-20",
+    "value": 95,
+    "cluster": "运动心率",
+    "domain": "health",
+    "conditions": "快跑中",
+    "result": "高强度运动心率，达到燃脂区间",
+    "source": "手环记录",
+    "sourceUrl": ""
+  },
+  {
+    "id": "heartrate_2024_01_21",
+    "name": "心率记录 - 2024-01-21",
+    "date": "2024-01-21",
+    "value": 65,
+    "cluster": "静息心率",
+    "domain": "health",
+    "conditions": "深度睡眠",
+    "result": "睡眠心率正常，恢复良好",
+    "source": "手环记录",
+    "sourceUrl": ""
+  },
+  {
+    "id": "heartrate_2024_01_22",
+    "name": "心率记录 - 2024-01-22",
+    "date": "2024-01-22",
+    "value": 78,
+    "cluster": "静息心率",
+    "domain": "health",
+    "conditions": "工作压力较大",
+    "result": "心率略高，可能与压力相关",
+    "source": "手环记录",
+    "sourceUrl": ""
+  },
+  {
+    "id": "heartrate_2024_01_23",
+    "name": "心率记录 - 2024-01-23",
+    "date": "2024-01-23",
+    "value": 88,
+    "cluster": "运动心率",
+    "domain": "health",
+    "conditions": "游泳中",
+    "result": "有氧运动心率，游泳强度适中",
+    "source": "手环记录",
+    "sourceUrl": ""
+  },
+  {
+    "id": "heartrate_2024_01_24",
+    "name": "心率记录 - 2024-01-24",
+    "date": "2024-01-24",
+    "value": 72,
+    "cluster": "静息心率",
+    "domain": "health",
+    "conditions": "运动后30分钟",
+    "result": "静息心率正常，运动恢复良好",
+    "source": "手环记录",
+    "sourceUrl": ""
+  }
+]
+

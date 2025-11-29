@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>大模型对齐技术演进图谱 (Data Driven)</title>
+    <title>健康监测 - 心率数据图谱</title>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
-    <link rel="stylesheet" href="../styles/map-theme.css">
+    <link rel="stylesheet" href="../../../styles/map-theme.css">
     <style>
         .chart-wrapper {
             position: relative;
@@ -358,22 +358,20 @@
 
     <!-- 面包屑导航 -->
     <div class="breadcrumb">
-        <a href="../home.html">首页</a>
+        <a href="../../../home.html">首页</a>
         <span> / </span>
-        <a href="engineering.html">工科</a>
+        <a href="../../engineering.html">工科</a>
         <span> / </span>
-        <a href="computer.html">计算机</a>
+        <a href="health-monitoring.html">生物医学工程</a>
         <span> / </span>
-        <a href="llm-algorithm.html">大模型算法</a>
-        <span> / </span>
-        <span class="current">后训练对齐</span>
+        <span class="current">健康监测</span>
     </div>
 
     <!-- 标题区 -->
-    <h1>大模型对齐技术演进图谱</h1>
+    <h1>健康监测 - 心率数据图谱</h1>
     <div class="subtitle">
-        基于科研价值筛选的核心样本点展示<br>
-        X轴：时间 | Y轴：方法效率与影响力
+        基于手环记录的心率数据展示<br>
+        X轴：时间 | Y轴：心率 (bpm)
     </div>
 
     <!-- 主题切换 -->
@@ -389,8 +387,9 @@
 
     <!-- 静态辅助图例 -->
     <div class="legend-info">
-        <div><span>●</span> 通用对话 (General Chat)</div>
-        <div><span>▲</span> 数学/推理 (Reasoning)</div>
+        <div><span>●</span> 健康监测 (Health Monitoring)</div>
+        <div><span>■</span> 运动数据 (Fitness)</div>
+        <div><span>◆</span> 睡眠数据 (Sleep)</div>
     </div>
 
     <!-- 数据统计 -->
@@ -412,20 +411,24 @@
 
     <script>
         // --- 配置常量 ---
+        // 支持通过 URL 参数指定数据文件，例如: ?data=charts/health/data.json
+        // 如果没有指定，默认使用当前目录的 data.json
+        const urlParams = new URLSearchParams(window.location.search);
+        const dataFile = urlParams.get('data') || 'data.json';
+        
         const CONFIG = {
-            // 更新路径为相对于 pages/ 目录
-            jsonUrl: `../data.json?v=${Date.now()}`,
+            // 数据文件路径（可通过 URL 参数 ?data=xxx.json 指定）
+            jsonUrl: `${dataFile}?v=${Date.now()}`,
             colors: {
-                'RLHF (传统派)': '#e3b341',
-                'RLAIF (AI反馈)': '#58a6ff',
-                'Reasoning / RLVF': '#f85149',
-                'Direct Alignment (去RL化)': '#3fb950',
-                'SFT / Distillation': '#a371f7',
-                'PRM (过程监督)': '#ffb6c1'
+                '静息心率': '#4ecdc4',
+                '运动心率': '#ff6b6b',
+                '睡眠心率': '#95e1d3',
+                '健康监测': '#ff8787'
             },
             shapes: {
-                'general': 'circle',
-                'reasoning': 'triangle'
+                'health': 'circle',
+                'fitness': 'rect',
+                'sleep': 'diamond'
             }
         };
 
@@ -539,15 +542,8 @@
                 const rawData = await response.json();
                 allData = rawData; // 保存所有数据
                 
-                // 加载验证实验数据
-                try {
-                    const verificationResponse = await fetch(`../verification-data.json?v=${Date.now()}`);
-                    if (verificationResponse.ok) {
-                        verificationData = await verificationResponse.json();
-                    }
-                } catch (e) {
-                    console.warn('验证实验数据加载失败，将使用模拟数据:', e);
-                }
+                // 健康监测数据不需要验证实验数据
+                // verificationData = {};
 
                 const seriesGroups = {};
                 
@@ -681,11 +677,11 @@
                     },
                     yAxis: {
                         type: 'value',
-                        name: '性能评分',
+                        name: '心率 (bpm)',
                         nameTextStyle: { color: theme.muted },
                         axisLabel: { show: false },
                         splitLine: { show: true, lineStyle: { color: theme.grid, opacity: 0.3 } },
-                        min: 2, max: 11
+                        min: 40, max: 120
                     },
                     series: seriesList
                 };
@@ -791,8 +787,8 @@
                     <div class="section-content">
                         <p><strong>日期:</strong> ${item.date}</p>
                         <p><strong>分类:</strong> ${item.cluster}</p>
-                        <p><strong>领域:</strong> ${item.domain === 'general' ? '通用对话' : '数学/推理'}</p>
-                        <p><strong>科研价值:</strong> ${item.value}</p>
+                        <p><strong>领域:</strong> ${item.domain === 'health' ? '健康监测' : item.domain === 'fitness' ? '运动数据' : '其他'}</p>
+                        <p><strong>心率值:</strong> ${item.value} bpm</p>
                     </div>
                 </div>
 
@@ -905,8 +901,8 @@
                 <div class="detail-section">
                     <div class="section-title">🔗 原始内容链接</div>
                     <div class="section-content">
-                        <a href="${item.paperUrl || `https://arxiv.org/search/?query=${encodeURIComponent(item.paper)}`}" target="_blank" class="link-item">
-                            📄 论文链接: ${item.paper}
+                        <a href="${item.sourceUrl || item.paperUrl || `https://arxiv.org/search/?query=${encodeURIComponent(item.source || item.paper || '')}`}" target="_blank" class="link-item">
+                            📄 数据来源: ${item.source || item.paper || '未知'}
                         </a>
                         <br><br>
                         ${item.codeUrl ? `

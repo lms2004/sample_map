@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>健康监测领域地图</title>
+    <style>
+        :root {
+            --bg-color: #f4f6f9;
+            --text-main: #2c3e50;
+            --text-light: #7f8c8d;
+            --col-eng: #2980b9;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: var(--text-main);
+        }
+
+        .breadcrumb {
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        .breadcrumb a {
+            color: var(--col-eng);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px 0;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        p.subtitle {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+
+        .map-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            cursor: pointer;
+            opacity: 0;
+            animation: fadeIn 0.5s forwards;
+            border-top: 5px solid var(--col-eng);
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .card.disabled {
+            opacity: 0.5;
+            filter: grayscale(100%);
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .card.disabled:hover {
+            transform: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .card-header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .subject-code {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--col-eng);
+            opacity: 0.6;
+        }
+
+        .subject-icon {
+            font-size: 1.5rem;
+        }
+
+        .card-body {
+            padding: 0 20px 20px 20px;
+        }
+
+        .card-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+
+        .card-desc {
+            font-size: 0.95rem;
+            color: var(--text-light);
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .tag {
+            background: #e8f4f8;
+            color: #2980b9;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .back-home {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 500;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .back-home:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .map-grid {
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+                gap: 20px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 15px;
+            }
+            .map-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            h1 { 
+                font-size: 1.8rem;
+                letter-spacing: 1px;
+            }
+            .back-home {
+                top: 10px;
+                left: 10px;
+                padding: 8px 16px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<a href="home.html" class="back-home">🏠 首页</a>
+
+<div class="breadcrumb">
+    <a href="home.html">首页</a>
+    <span> / </span>
+    <a href="engineering.html">工科</a>
+    <span> / </span>
+    <span class="current">生物医学工程</span>
+</div>
+
+<header>
+    <h1>🏥 健康监测领域地图</h1>
+    <p class="subtitle">探索健康监测各技术方向</p>
+</header>
+
+<div class="map-grid" id="grid">
+    <!-- 卡片将通过 JS 动态生成 -->
+</div>
+
+<script>
+    const subjects = [
+        {
+            code: "HR", name: "心率监测", icon: "❤️",
+            desc: "监测和分析心率数据，包括静息心率、运动心率等。",
+            sub: ["静息心率", "运动心率", "睡眠心率", "心率变异性"],
+            link: "charts/health/heartrate-chart.html"
+        },
+        {
+            code: "SLEEP", name: "睡眠监测", icon: "😴",
+            desc: "监测睡眠质量，包括睡眠时长、深度睡眠等指标。",
+            sub: ["睡眠时长", "深度睡眠", "REM睡眠", "睡眠效率"],
+            link: "#"
+        },
+        {
+            code: "ACTIVITY", name: "运动监测", icon: "🏃",
+            desc: "监测运动数据，包括步数、卡路里、运动强度等。",
+            sub: ["步数", "卡路里", "运动强度", "运动时长"],
+            link: "#"
+        },
+        {
+            code: "BLOOD", name: "血压监测", icon: "🩸",
+            desc: "监测血压数据，包括收缩压、舒张压等。",
+            sub: ["收缩压", "舒张压", "血压趋势", "异常预警"],
+            link: "#"
+        },
+        {
+            code: "BLOOD_SUGAR", name: "血糖监测", icon: "🍬",
+            desc: "监测血糖水平，包括餐前血糖、餐后血糖等。",
+            sub: ["餐前血糖", "餐后血糖", "血糖趋势", "异常预警"],
+            link: "#"
+        },
+        {
+            code: "WEIGHT", name: "体重监测", icon: "⚖️",
+            desc: "监测体重变化，包括体重、BMI、体脂率等。",
+            sub: ["体重", "BMI", "体脂率", "肌肉量"],
+            link: "#"
+        }
+    ];
+
+    const grid = document.getElementById('grid');
+    
+    subjects.forEach((sub, index) => {
+        const card = document.createElement('a');
+        card.href = sub.link || '#';
+        card.className = 'card';
+        if (sub.link === '#') {
+            card.classList.add('disabled');
+        }
+        card.style.animationDelay = `${index * 0.05}s`;
+        
+        card.innerHTML = `
+            <div class="card-header">
+                <span class="subject-code">${sub.code}</span>
+                <span class="subject-icon">${sub.icon}</span>
+            </div>
+            <div class="card-body">
+                <div class="card-title">${sub.name}</div>
+                <div class="card-desc">${sub.desc}</div>
+                <div class="card-tags">
+                    ${sub.sub.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                </div>
+            </div>
+        `;
+        
+        grid.appendChild(card);
+    });
+</script>
+</body>
+</html>
+
