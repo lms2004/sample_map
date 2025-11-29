@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工科领域地图</title>
+    <link rel="stylesheet" href="../styles/map-theme.css">
+    <style>
+        .map-area.computer {
+            top: 15%;
+            left: 20%;
+            width: 30%;
+            height: 35%;
+            clip-path: polygon(15% 0%, 90% 8%, 100% 45%, 85% 85%, 25% 100%, 0% 55%, 5% 15%);
+            background: linear-gradient(135deg, #58a6ff 0%, #3fb950 100%);
+        }
+        
+        .map-area.mechanical {
+            top: 10%;
+            right: 15%;
+            width: 28%;
+            height: 32%;
+            clip-path: polygon(20% 0%, 100% 12%, 95% 50%, 80% 88%, 18% 100%, 0% 60%);
+            background: linear-gradient(135deg, #a371f7 0%, #f85149 100%);
+        }
+        
+        .map-area.electronic {
+            bottom: 20%;
+            left: 12%;
+            width: 30%;
+            height: 30%;
+            clip-path: polygon(0% 25%, 35% 0%, 75% 8%, 100% 35%, 88% 82%, 45% 100%, 8% 90%);
+            background: linear-gradient(135deg, #ffb6c1 0%, #e3b341 100%);
+        }
+        
+        .map-area.materials {
+            bottom: 15%;
+            right: 18%;
+            width: 32%;
+            height: 33%;
+            clip-path: polygon(18% 0%, 88% 6%, 100% 42%, 92% 86%, 42% 100%, 5% 72%, 0% 32%);
+            background: linear-gradient(135deg, #f85149 0%, #ffb6c1 100%);
+        }
+    </style>
+</head>
+<body>
+    <!-- 面包屑导航 -->
+    <div class="breadcrumb">
+        <a href="../home.html">首页</a>
+        <span> / </span>
+        <span class="current">工科</span>
+    </div>
+
+    <!-- 标题区 -->
+    <h1>工科领域地图</h1>
+    <div class="subtitle">
+        探索工科各细分领域<br>
+        点击区域进入相应领域
+    </div>
+
+    <!-- 主题切换 -->
+    <div class="theme-toggle">
+        <button id="theme-toggle-btn">切换为浅色背景</button>
+    </div>
+
+    <!-- 地图容器 -->
+    <div class="map-container">
+        <!-- 计算机区域 - 可点击 -->
+        <div class="map-area computer clickable" onclick="window.location.href='computer.html'">
+            <div class="area-label">计算机</div>
+        </div>
+        
+        <!-- 机械工程区域 - 占位 -->
+        <div class="map-area mechanical placeholder">
+            <div class="area-label">机械工程</div>
+        </div>
+        
+        <!-- 电子工程区域 - 占位 -->
+        <div class="map-area electronic placeholder">
+            <div class="area-label">电子工程</div>
+        </div>
+        
+        <!-- 材料科学区域 - 占位 -->
+        <div class="map-area materials placeholder">
+            <div class="area-label">材料科学</div>
+        </div>
+    </div>
+
+    <script>
+        const themeToggleBtn = document.getElementById('theme-toggle-btn');
+        let currentTheme = 'dark';
+
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', () => {
+                currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                document.body.classList.toggle('light-theme', currentTheme === 'light');
+                themeToggleBtn.textContent = currentTheme === 'dark' ? '切换为浅色背景' : '切换为夜间背景';
+            });
+        }
+    </script>
+</body>
+</html>
+

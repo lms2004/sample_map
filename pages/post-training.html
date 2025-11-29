@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>后训练对齐领域地图</title>
+    <link rel="stylesheet" href="../styles/map-theme.css">
+    <style>
+        .map-area.rl-alignment {
+            top: 22%;
+            left: 22%;
+            width: 32%;
+            height: 42%;
+            clip-path: polygon(8% 0%, 92% 4%, 100% 45%, 88% 86%, 18% 100%, 0% 62%, 3% 20%);
+            background: linear-gradient(135deg, #58a6ff 0%, #3fb950 100%);
+        }
+        
+        .map-area.direct-alignment {
+            top: 15%;
+            right: 18%;
+            width: 30%;
+            height: 38%;
+            clip-path: polygon(20% 0%, 100% 6%, 98% 52%, 84% 94%, 18% 100%, 0% 64%);
+            background: linear-gradient(135deg, #a371f7 0%, #f85149 100%);
+        }
+        
+        .map-area.ai-feedback {
+            bottom: 20%;
+            left: 15%;
+            width: 32%;
+            height: 34%;
+            clip-path: polygon(0% 26%, 36% 0%, 76% 5%, 100% 34%, 94% 82%, 52% 100%, 6% 96%);
+            background: linear-gradient(135deg, #ffb6c1 0%, #e3b341 100%);
+        }
+    </style>
+</head>
+<body>
+    <!-- 面包屑导航 -->
+    <div class="breadcrumb">
+        <a href="../home.html">首页</a>
+        <span> / </span>
+        <a href="engineering.html">工科</a>
+        <span> / </span>
+        <a href="computer.html">计算机</a>
+        <span> / </span>
+        <a href="llm-algorithm.html">大模型算法</a>
+        <span> / </span>
+        <span class="current">后训练对齐</span>
+    </div>
+
+    <!-- 标题区 -->
+    <h1>后训练对齐领域地图</h1>
+    <div class="subtitle">
+        探索后训练对齐各技术方向<br>
+        点击区域进入相应技术图谱
+    </div>
+
+    <!-- 主题切换 -->
+    <div class="theme-toggle">
+        <button id="theme-toggle-btn">切换为浅色背景</button>
+    </div>
+
+    <!-- 地图容器 -->
+    <div class="map-container">
+        <!-- 强化学习对齐区域 - 可点击 -->
+        <div class="map-area rl-alignment clickable" onclick="window.location.href='alignment-chart.html'">
+            <div class="area-label">强化学习对齐</div>
+        </div>
+        
+        <!-- 直接对齐区域 - 占位 -->
+        <div class="map-area direct-alignment placeholder">
+            <div class="area-label">直接对齐</div>
+        </div>
+        
+        <!-- AI反馈区域 - 占位 -->
+        <div class="map-area ai-feedback placeholder">
+            <div class="area-label">AI反馈</div>
+        </div>
+    </div>
+
+    <script>
+        const themeToggleBtn = document.getElementById('theme-toggle-btn');
+        let currentTheme = 'dark';
+
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', () => {
+                currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                document.body.classList.toggle('light-theme', currentTheme === 'light');
+                themeToggleBtn.textContent = currentTheme === 'dark' ? '切换为浅色背景' : '切换为夜间背景';
+            });
+        }
+    </script>
+</body>
+</html>
+

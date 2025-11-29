@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大模型算法领域地图</title>
+    <link rel="stylesheet" href="../styles/map-theme.css">
+    <style>
+        .map-area.post-training {
+            top: 20%;
+            left: 20%;
+            width: 30%;
+            height: 40%;
+            clip-path: polygon(10% 0%, 90% 5%, 100% 42%, 85% 82%, 20% 100%, 0% 60%, 5% 22%);
+            background: linear-gradient(135deg, #58a6ff 0%, #3fb950 100%);
+        }
+        
+        .map-area.base-model {
+            top: 12%;
+            right: 15%;
+            width: 28%;
+            height: 36%;
+            clip-path: polygon(18% 0%, 100% 8%, 96% 50%, 82% 92%, 16% 100%, 0% 60%);
+            background: linear-gradient(135deg, #a371f7 0%, #f85149 100%);
+        }
+        
+        .map-area.application {
+            bottom: 18%;
+            left: 12%;
+            width: 30%;
+            height: 32%;
+            clip-path: polygon(0% 24%, 32% 0%, 72% 4%, 100% 32%, 92% 80%, 50% 100%, 8% 94%);
+            background: linear-gradient(135deg, #ffb6c1 0%, #e3b341 100%);
+        }
+    </style>
+</head>
+<body>
+    <!-- 面包屑导航 -->
+    <div class="breadcrumb">
+        <a href="../home.html">首页</a>
+        <span> / </span>
+        <a href="engineering.html">工科</a>
+        <span> / </span>
+        <a href="computer.html">计算机</a>
+        <span> / </span>
+        <span class="current">大模型算法</span>
+    </div>
+
+    <!-- 标题区 -->
+    <h1>大模型算法领域地图</h1>
+    <div class="subtitle">
+        探索大模型算法各研究方向<br>
+        点击区域进入相应方向
+    </div>
+
+    <!-- 主题切换 -->
+    <div class="theme-toggle">
+        <button id="theme-toggle-btn">切换为浅色背景</button>
+    </div>
+
+    <!-- 地图容器 -->
+    <div class="map-container">
+        <!-- 后训练对齐区域 - 可点击 -->
+        <div class="map-area post-training clickable" onclick="window.location.href='post-training.html'">
+            <div class="area-label">后训练对齐</div>
+        </div>
+        
+        <!-- 基础模型研究区域 - 占位 -->
+        <div class="map-area base-model placeholder">
+            <div class="area-label">基础模型研究</div>
+        </div>
+        
+        <!-- 应用研究区域 - 占位 -->
+        <div class="map-area application placeholder">
+            <div class="area-label">应用研究</div>
+        </div>
+    </div>
+
+    <script>
+        const themeToggleBtn = document.getElementById('theme-toggle-btn');
+        let currentTheme = 'dark';
+
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', () => {
+                currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                document.body.classList.toggle('light-theme', currentTheme === 'light');
+                themeToggleBtn.textContent = currentTheme === 'dark' ? '切换为浅色背景' : '切换为夜间背景';
+            });
+        }
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学科知识地图 - 首页</title>
+    <link rel="stylesheet" href="styles/map-theme.css">
+    <style>
+        .map-area {
+            background: linear-gradient(135deg, #58a6ff 0%, #3fb950 100%);
+        }
+        
+        .map-area.engineering {
+            top: 20%;
+            left: 15%;
+            width: 35%;
+            height: 40%;
+            clip-path: polygon(10% 0%, 90% 5%, 100% 40%, 85% 80%, 20% 100%, 0% 60%, 5% 20%);
+            background: linear-gradient(135deg, #58a6ff 0%, #3fb950 100%);
+        }
+        
+        .map-area.science {
+            top: 10%;
+            right: 10%;
+            width: 30%;
+            height: 35%;
+            clip-path: polygon(20% 0%, 100% 10%, 95% 50%, 80% 90%, 15% 100%, 0% 60%);
+            background: linear-gradient(135deg, #a371f7 0%, #f85149 100%);
+        }
+        
+        .map-area.liberal-arts {
+            bottom: 15%;
+            left: 10%;
+            width: 28%;
+            height: 30%;
+            clip-path: polygon(0% 20%, 30% 0%, 70% 5%, 100% 30%, 90% 80%, 50% 100%, 10% 90%);
+            background: linear-gradient(135deg, #ffb6c1 0%, #e3b341 100%);
+        }
+        
+        .map-area.medicine {
+            bottom: 10%;
+            right: 15%;
+            width: 32%;
+            height: 35%;
+            clip-path: polygon(15% 0%, 85% 5%, 100% 40%, 90% 85%, 40% 100%, 5% 70%, 0% 30%);
+            background: linear-gradient(135deg, #f85149 0%, #ffb6c1 100%);
+        }
+    </style>
+</head>
+<body>
+    <!-- 面包屑导航 -->
+    <div class="breadcrumb">
+        <span class="current">首页</span>
+    </div>
+
+    <!-- 标题区 -->
+    <h1>学科知识地图</h1>
+    <div class="subtitle">
+        探索不同学科领域的知识结构<br>
+        点击区域进入相应领域
+    </div>
+
+    <!-- 主题切换 -->
+    <div class="theme-toggle">
+        <button id="theme-toggle-btn">切换为浅色背景</button>
+    </div>
+
+    <!-- 地图容器 -->
+    <div class="map-container">
+        <!-- 工科区域 - 可点击 -->
+        <div class="map-area engineering clickable" onclick="window.location.href='pages/engineering.html'">
+            <div class="area-label">工科</div>
+        </div>
+        
+        <!-- 理科区域 - 占位 -->
+        <div class="map-area science placeholder">
+            <div class="area-label">理科</div>
+        </div>
+        
+        <!-- 文科区域 - 占位 -->
+        <div class="map-area liberal-arts placeholder">
+            <div class="area-label">文科</div>
+        </div>
+        
+        <!-- 医学区域 - 占位 -->
+        <div class="map-area medicine placeholder">
+            <div class="area-label">医学</div>
+        </div>
+    </div>
+
+    <script>
+        // 主题切换功能
+        const themeToggleBtn = document.getElementById('theme-toggle-btn');
+        let currentTheme = 'dark';
+
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', () => {
+                currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                document.body.classList.toggle('light-theme', currentTheme === 'light');
+                themeToggleBtn.textContent = currentTheme === 'dark' ? '切换为浅色背景' : '切换为夜间背景';
+            });
+        }
+    </script>
+</body>
+</html>
+

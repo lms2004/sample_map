@@ -1,0 +1,245 @@
+/* 地图主题样式 - 共享样式文件 */
+
+/* --- 基础样式：暗色/浅色双主题 --- */
+body {
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: #0d1117;
+    color: #c9d1d9;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+h1 {
+    color: #58a6ff;
+    margin-bottom: 5px;
+    font-size: 28px;
+    transition: color 0.25s ease;
+}
+
+.subtitle {
+    font-size: 14px;
+    color: #8b949e;
+    margin-bottom: 20px;
+    text-align: center;
+    transition: color 0.25s ease;
+}
+
+/* --- 面包屑导航 --- */
+.breadcrumb {
+    width: 100%;
+    max-width: 1200px;
+    margin-bottom: 20px;
+    padding: 10px 20px;
+    background: #161b22;
+    border-radius: 8px;
+    border: 1px solid #30363d;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.breadcrumb a {
+    color: #58a6ff;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.breadcrumb a:hover {
+    color: #79c0ff;
+    text-decoration: underline;
+}
+
+.breadcrumb span {
+    color: #8b949e;
+}
+
+.breadcrumb .current {
+    color: #c9d1d9;
+    font-weight: 500;
+}
+
+/* --- 主题切换按钮 --- */
+.theme-toggle {
+    margin-bottom: 20px;
+}
+
+.theme-toggle button {
+    padding: 8px 16px;
+    font-size: 14px;
+    border-radius: 6px;
+    border: 1px solid #30363d;
+    background: #161b22;
+    color: #c9d1d9;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.theme-toggle button:hover {
+    background: #21262d;
+    border-color: #58a6ff;
+}
+
+/* --- 地图容器 --- */
+.map-container {
+    position: relative;
+    width: 100%;
+    max-width: 1200px;
+    height: 600px;
+    background: #161b22;
+    border-radius: 12px;
+    border: 1px solid #30363d;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+/* --- 地图区域块 --- */
+.map-area {
+    position: absolute;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    z-index: 1;
+}
+
+.map-area:hover {
+    z-index: 10;
+    transform: scale(1.05);
+    filter: brightness(1.2);
+    box-shadow: 0 8px 24px rgba(88, 166, 255, 0.4);
+}
+
+.map-area.clickable {
+    border-color: #58a6ff;
+}
+
+.map-area.placeholder {
+    cursor: not-allowed;
+    opacity: 0.4;
+    filter: grayscale(0.5);
+}
+
+.map-area.placeholder:hover {
+    transform: scale(1.02);
+    filter: grayscale(0.5) brightness(1.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+/* 区域标签 */
+.area-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #fff;
+    font-size: 18px;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    pointer-events: none;
+    z-index: 2;
+    transition: all 0.3s ease;
+}
+
+.map-area:hover .area-label {
+    font-size: 20px;
+    text-shadow: 2px 2px 8px rgba(88, 166, 255, 0.8);
+}
+
+.map-area.placeholder .area-label::after {
+    content: ' (建设中)';
+    font-size: 12px;
+    font-weight: normal;
+    opacity: 0.8;
+}
+
+/* --- 浅色主题覆盖 --- */
+body.light-theme {
+    background-color: #f5f5f5;
+    color: #24292f;
+}
+
+body.light-theme h1 {
+    color: #0969da;
+}
+
+body.light-theme .subtitle {
+    color: #57606a;
+}
+
+body.light-theme .breadcrumb {
+    background: #ffffff;
+    border-color: #d0d7de;
+}
+
+body.light-theme .breadcrumb a {
+    color: #0969da;
+}
+
+body.light-theme .breadcrumb a:hover {
+    color: #0550ae;
+}
+
+body.light-theme .breadcrumb span {
+    color: #57606a;
+}
+
+body.light-theme .breadcrumb .current {
+    color: #24292f;
+}
+
+body.light-theme .theme-toggle button {
+    background: #ffffff;
+    border-color: #d0d7de;
+    color: #24292f;
+}
+
+body.light-theme .theme-toggle button:hover {
+    background: #f3f4f6;
+    border-color: #0969da;
+}
+
+body.light-theme .map-container {
+    background: #ffffff;
+    border-color: #d0d7de;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+body.light-theme .map-area.clickable {
+    border-color: #0969da;
+}
+
+body.light-theme .map-area:hover {
+    box-shadow: 0 8px 24px rgba(9, 105, 218, 0.3);
+}
+
+body.light-theme .area-label {
+    color: #24292f;
+    text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+}
+
+body.light-theme .map-area:hover .area-label {
+    text-shadow: 2px 2px 8px rgba(9, 105, 218, 0.5);
+}
+
+/* --- 响应式设计 --- */
+@media (max-width: 768px) {
+    .map-container {
+        height: 500px;
+    }
+    
+    .area-label {
+        font-size: 14px;
+    }
+    
+    h1 {
+        font-size: 24px;
+    }
+}
+
