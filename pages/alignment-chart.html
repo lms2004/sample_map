@@ -142,6 +142,23 @@
             color: #24292f;
         }
 
+        .back-btn {
+            background: #f6f8fa;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            color: #24292f;
+            transition: all 0.2s;
+            margin-right: 10px;
+        }
+
+        .back-btn:hover {
+            background: #f3f4f6;
+            border-color: #8b949e;
+        }
+
         .detail-section {
             margin-bottom: 25px;
         }
@@ -385,6 +402,7 @@
     <div id="detail-modal" class="detail-modal">
         <div class="modal-content">
             <div class="modal-header">
+                <button class="back-btn" id="back-btn" style="display: none;">← 返回</button>
                 <h2 class="modal-title" id="modal-title">详情</h2>
                 <button class="close-btn" id="close-modal">&times;</button>
             </div>
@@ -444,6 +462,8 @@
         const myChart = echarts.init(chartDom, 'light');
         const detailModal = document.getElementById('detail-modal');
         const closeModalBtn = document.getElementById('close-modal');
+        const backBtn = document.getElementById('back-btn');
+        let originalItem = null; // 存储原始数据点，用于返回
         
         // 默认应用浅色主题
         document.body.classList.add('light-theme');
@@ -663,7 +683,7 @@
                     },
                     yAxis: {
                         type: 'value',
-                        name: '科研价值 / 效率 (Value)',
+                        name: '性能评分',
                         nameTextStyle: { color: theme.muted },
                         axisLabel: { show: false },
                         splitLine: { show: true, lineStyle: { color: theme.grid, opacity: 0.3 } },
@@ -738,11 +758,20 @@
         }
 
         // 显示详情模态框（内部函数）
-        async function _showDetailModalInternal(item) {
-            // 查找验证数据
-            const verificationByLevel = findSimilarPoints(item);
+        async function _showDetailModalInternal(item, isVerificationExperiment = false) {
+            // 如果不是验证实验，保存为原始数据点
+            if (!isVerificationExperiment) {
+                originalItem = item;
+                if (backBtn) backBtn.style.display = 'none';
+            } else {
+                // 如果是验证实验，显示返回按钮
+                if (backBtn) backBtn.style.display = 'block';
+            }
             
-            // 计算各级别的数量
+            // 查找验证数据（只有非验证实验才查找，避免嵌套）
+            const verificationByLevel = isVerificationExperiment ? { A: [], B: [], C: [] } : findSimilarPoints(item);
+            
+            // 计算各级别的数量（完全基于实际数据，不使用随机数）
             const verification = {
                 counts: {
                     A: verificationByLevel.A.length,
@@ -752,14 +781,10 @@
                 total: verificationByLevel.A.length + verificationByLevel.B.length + verificationByLevel.C.length
             };
             
-            // 如果没有找到验证数据，使用模拟数据
-            if (verification.total === 0) {
-                const mockVerification = generateVerificationData(item);
-                verification.counts = mockVerification.counts;
-                verification.total = mockVerification.total;
-            }
-            
             document.getElementById('modal-title').textContent = item.name;
+            
+            // 如果是验证实验，不显示分级验证部分
+            const showVerificationSection = !isVerificationExperiment;
             
             const modalBody = document.getElementById('modal-body');
             modalBody.innerHTML = `
@@ -810,11 +835,10 @@
                 </div>
 
                 <div class="detail-section">
-                    <div class="section-title">✅ 真实性验证</div>
+                    <div class="section-title">💬 评论区</div>
                     <div class="section-content">
-                        <div style="margin-bottom: 15px;">
-                            <strong>实验复现状态:</strong>
-                            <span style="color: #1a7f37; font-weight: 600;">✓ 已验证</span>
+                        <div style="margin-bottom: 15px; font-size: 13px; color: #57606a;">
+                            <span style="color: #1a7f37; font-weight: 600;">✓ 实验复现状态: 已验证</span>
                         </div>
                         <div class="comment-section">
                             <div class="comment-item">
@@ -833,6 +857,7 @@
                     </div>
                 </div>
 
+                ${showVerificationSection ? `
                 <div class="detail-section">
                     <div class="section-title">🎯 分级验证</div>
                     <div class="section-content">
@@ -877,11 +902,12 @@
                         </div>
                     </div>
                 </div>
+                ` : ''}
 
                 <div class="detail-section">
                     <div class="section-title">🔗 原始内容链接</div>
                     <div class="section-content">
-                        <a href="https://arxiv.org/search/?query=${encodeURIComponent(item.paper)}" target="_blank" class="link-item">
+                        <a href="${item.paperUrl || `https://arxiv.org/search/?query=${encodeURIComponent(item.paper)}`}" target="_blank" class="link-item">
                             📄 论文链接: ${item.paper}
                         </a>
                         <br><br>
@@ -891,13 +917,26 @@
                             </a>
                             <br><br>
                         ` : ''}
-                        <a href="https://github.com/search?q=${encodeURIComponent(item.name)}" target="_blank" class="link-item">
-                            💻 GitHub 代码库
-                        </a>
-                        <br><br>
-                        <a href="https://huggingface.co/search?q=${encodeURIComponent(item.name)}" target="_blank" class="link-item">
-                            🤗 HuggingFace 模型
-                        </a>
+                        ${item.githubUrl ? `
+                            <a href="${item.githubUrl}" target="_blank" class="link-item">
+                                💻 GitHub 代码库: ${item.githubUrl}
+                            </a>
+                            <br><br>
+                        ` : `
+                            <a href="https://github.com/search?q=${encodeURIComponent(item.name)}" target="_blank" class="link-item">
+                                💻 GitHub 代码库
+                            </a>
+                            <br><br>
+                        `}
+                        ${item.huggingfaceUrl ? `
+                            <a href="${item.huggingfaceUrl}" target="_blank" class="link-item">
+                                🤗 HuggingFace 模型: ${item.huggingfaceUrl}
+                            </a>
+                        ` : `
+                            <a href="https://huggingface.co/search?q=${encodeURIComponent(item.name)}" target="_blank" class="link-item">
+                                🤗 HuggingFace 模型
+                            </a>
+                        `}
                     </div>
                 </div>
             `;
@@ -968,13 +1007,19 @@
                         `).join('')}
                     `;
                     
-                    // 绑定点击事件
+                    // 绑定点击事件（C级验证实验不可点击，避免嵌套）
                     listContainer.querySelectorAll('.similar-point-item').forEach((item, idx) => {
-                        item.addEventListener('click', async function() {
-                            const point = filteredPoints[idx];
-                            // 验证实验数据已经是完整的，直接使用
-                            await _showDetailModalInternal(point);
-                        });
+                        const point = filteredPoints[idx];
+                        // C级验证实验不可点击
+                        if (level === 'C') {
+                            item.style.cursor = 'default';
+                            item.style.opacity = '0.8';
+                        } else {
+                            // A和B级验证实验可以点击查看详情
+                            item.addEventListener('click', async function() {
+                                await _showDetailModalInternal(point, true);
+                            });
+                        }
                     });
                 }
             });
@@ -995,6 +1040,15 @@
         // 绑定关闭按钮
         if (closeModalBtn) {
             closeModalBtn.addEventListener('click', closeModal);
+        }
+
+        // 绑定返回按钮
+        if (backBtn) {
+            backBtn.addEventListener('click', function() {
+                if (originalItem) {
+                    _showDetailModalInternal(originalItem, false);
+                }
+            });
         }
 
         // 点击背景关闭

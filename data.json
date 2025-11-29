@@ -833,7 +833,10 @@
     "domain": "reasoning",
     "conditions": "Advanced RL Search + Reasoning",
     "result": "OpenAI 针对 R1 的回应，推理能力极强且速度更快",
-    "paper": "OpenAI o3-mini Announcement"
+    "paper": "OpenAI o3-mini Announcement",
+    "paperUrl": "https://openai.com/zh-Hant/index/introducing-o3-and-o4-mini/",
+    "githubUrl": "",
+    "huggingfaceUrl": ""
   },
   {
     "id": "spark_x15",
