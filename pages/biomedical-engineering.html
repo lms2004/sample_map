@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>健康监测领域地图</title>
+    <title>生物医学工程领域地图</title>
     <style>
         :root {
             --bg-color: #f4f6f9;
@@ -213,14 +213,12 @@
     <span> / </span>
     <a href="engineering.html">工科</a>
     <span> / </span>
-    <a href="biomedical-engineering.html">生物医学工程</a>
-    <span> / </span>
-    <span class="current">健康监测</span>
+    <span class="current">生物医学工程</span>
 </div>
 
 <header>
-    <h1>🏥 健康监测领域地图</h1>
-    <p class="subtitle">探索健康监测各技术方向</p>
+    <h1>🏥 生物医学工程领域地图</h1>
+    <p class="subtitle">探索生物医学工程各技术方向</p>
 </header>
 
 <div class="map-grid" id="grid">
@@ -230,39 +228,51 @@
 <script>
     const subjects = [
         {
-            code: "HR", name: "心率监测", icon: "❤️",
-            desc: "监测和分析心率数据，包括静息心率、运动心率等。",
-            sub: ["静息心率", "运动心率", "睡眠心率", "心率变异性"],
-            link: "charts/health/heartrate-chart.html"
+            code: "HM", name: "健康监测", icon: "❤️",
+            desc: "监测和分析人体健康数据，包括心率、睡眠、运动等生理指标。",
+            sub: ["心率监测", "睡眠监测", "运动监测", "血压监测", "血糖监测", "体重监测"],
+            link: "health-monitoring.html"
         },
         {
-            code: "SLEEP", name: "睡眠监测", icon: "😴",
-            desc: "监测睡眠质量，包括睡眠时长、深度睡眠等指标。",
-            sub: ["睡眠时长", "深度睡眠", "REM睡眠", "睡眠效率"],
+            code: "MI", name: "医学影像", icon: "📷",
+            desc: "利用各种成像技术获取人体内部结构和功能信息。",
+            sub: ["X射线成像", "CT扫描", "MRI成像", "超声成像", "核医学成像", "光学成像"],
             link: "#"
         },
         {
-            code: "ACTIVITY", name: "运动监测", icon: "🏃",
-            desc: "监测运动数据，包括步数、卡路里、运动强度等。",
-            sub: ["步数", "卡路里", "运动强度", "运动时长"],
+            code: "BSP", name: "生物信号处理", icon: "📊",
+            desc: "处理和分析生物医学信号，提取有用信息。",
+            sub: ["ECG信号处理", "EEG信号处理", "EMG信号处理", "信号滤波", "特征提取", "模式识别"],
             link: "#"
         },
         {
-            code: "BLOOD", name: "血压监测", icon: "🩸",
-            desc: "监测血压数据，包括收缩压、舒张压等。",
-            sub: ["收缩压", "舒张压", "血压趋势", "异常预警"],
+            code: "MD", name: "医疗器械", icon: "🔧",
+            desc: "设计、开发和应用医疗设备与器械。",
+            sub: ["诊断设备", "治疗设备", "监护设备", "康复设备", "手术器械", "植入式设备"],
             link: "#"
         },
         {
-            code: "BLOOD_SUGAR", name: "血糖监测", icon: "🍬",
-            desc: "监测血糖水平，包括餐前血糖、餐后血糖等。",
-            sub: ["餐前血糖", "餐后血糖", "血糖趋势", "异常预警"],
+            code: "BM", name: "生物材料", icon: "🧬",
+            desc: "研究和开发用于医疗应用的生物相容性材料。",
+            sub: ["医用金属", "生物陶瓷", "生物高分子", "复合材料", "纳米材料", "可降解材料"],
             link: "#"
         },
         {
-            code: "WEIGHT", name: "体重监测", icon: "⚖️",
-            desc: "监测体重变化，包括体重、BMI、体脂率等。",
-            sub: ["体重", "BMI", "体脂率", "肌肉量"],
+            code: "TE", name: "组织工程", icon: "🔬",
+            desc: "利用工程学原理构建生物组织和器官。",
+            sub: ["支架材料", "细胞培养", "3D打印", "器官再生", "干细胞技术", "生物打印"],
+            link: "#"
+        },
+        {
+            code: "RE", name: "康复工程", icon: "🦽",
+            desc: "开发辅助技术和设备帮助患者康复。",
+            sub: ["假肢", "矫形器", "助行器", "康复训练设备", "辅助技术", "无障碍设计"],
+            link: "#"
+        },
+        {
+            code: "BI", name: "生物信息学", icon: "💻",
+            desc: "应用计算技术分析生物医学数据。",
+            sub: ["基因组学", "蛋白质组学", "系统生物学", "药物设计", "生物数据库", "机器学习"],
             link: "#"
         }
     ];
