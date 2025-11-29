@@ -6,7 +6,7 @@
     <title>大模型对齐技术演进图谱 (Data Driven)</title>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <style>
-        /* --- 样式层：保持暗色科技风 --- */
+        /* --- 样式层：暗色/浅色双主题 --- */
         body {
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: #0d1117;
@@ -16,9 +16,26 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            transition: background-color 0.25s ease, color 0.25s ease;
         }
-        h1 { color: #58a6ff; margin-bottom: 5px; font-size: 24px; }
-        .subtitle { font-size: 14px; color: #8b949e; margin-bottom: 20px; text-align: center; }
+        h1 { color: #58a6ff; margin-bottom: 5px; font-size: 24px; transition: color 0.25s ease; }
+        .subtitle { font-size: 14px; color: #8b949e; margin-bottom: 20px; text-align: center; transition: color 0.25s ease; }
+
+        .theme-toggle {
+            margin-bottom: 10px;
+        }
+        .theme-toggle button {
+            padding: 4px 10px;
+            font-size: 12px;
+            border-radius: 999px;
+            border: 1px solid #30363d;
+            background: #161b22;
+            color: #c9d1d9;
+            cursor: pointer;
+        }
+        .theme-toggle button:hover {
+            background: #21262d;
+        }
         
         .chart-wrapper {
             position: relative;
@@ -66,6 +83,45 @@
             color: #8b949e;
             text-align: center;
         }
+
+        /* 浅色主题覆盖 */
+        body.light-theme {
+            background-color: #f5f5f5;
+            color: #24292f;
+        }
+        body.light-theme h1 {
+            color: #0969da;
+        }
+        body.light-theme .subtitle {
+            color: #57606a;
+        }
+        body.light-theme #chart-container {
+            background: #ffffff;
+            border-color: #d0d7de;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        body.light-theme .legend-info {
+            background: #ffffff;
+            border-color: #d0d7de;
+            color: #57606a;
+        }
+        body.light-theme .legend-info span {
+            color: #24292f;
+        }
+        body.light-theme #data-stats {
+            color: #57606a;
+        }
+        body.light-theme #loading-msg {
+            color: #0969da;
+        }
+        body.light-theme .theme-toggle button {
+            background: #ffffff;
+            border-color: #d0d7de;
+            color: #24292f;
+        }
+        body.light-theme .theme-toggle button:hover {
+            background: #f3f4f6;
+        }
     </style>
 </head>
 <body>
@@ -75,6 +131,11 @@
     <div class="subtitle">
         基于科研价值筛选的核心样本点展示<br>
         X轴：时间 | Y轴：方法效率与影响力
+    </div>
+
+    <!-- 主题切换 -->
+    <div class="theme-toggle">
+        <button id="theme-toggle-btn">切换为浅色背景</button>
     </div>
 
     <!-- 图表容器 -->
@@ -98,11 +159,12 @@
             // 带时间戳参数，避免浏览器缓存 data.json
             jsonUrl: `./data.json?v=${Date.now()}`,
             colors: {
-                'RLHF (传统派)': '#e3b341',              // 黄色 - PPO, GPT-4, Llama 2
-                'RLAIF (AI反馈)': '#58a6ff',             // 蓝色 - Claude 系列, Starling
-                'Reasoning / RLVF': '#f85149',           // 红色 - DeepSeek R1, o1, Math models
-                'Direct Alignment (去RL化)': '#3fb950',  // 绿色 - DPO, Llama 3, Qwen
-                'SFT / Distillation': '#a371f7'          // 紫色 - Alpaca, Vicuna, Phi (新增)
+                'RLHF (传统派)': '#e3b341',                 // 黄色 - PPO, GPT-4, Llama 2
+                'RLAIF (AI反馈)': '#58a6ff',                // 蓝色 - Claude 系列, Starling
+                'Reasoning / RLVF': '#f85149',              // 红色 - DeepSeek R1, o1, Math models
+                'Direct Alignment (去RL化)': '#3fb950',     // 绿色 - DPO, Llama 3, Qwen
+                'SFT / Distillation': '#a371f7',            // 紫色 - Alpaca, Vicuna, Phi
+                'PRM (过程监督)': '#ffb6c1'                 // 粉色 - Math Shepherd, InternLM2-Math, Qwen2-Math
             },
             shapes: {
                 'general': 'circle',
@@ -110,10 +172,32 @@
             }
         };
 
+        // --- 主题配置 ---
+        const THEME_STYLES = {
+            dark: {
+                text: '#c9d1d9',
+                muted: '#8b949e',
+                border: '#30363d',
+                grid: '#30363d',
+                tooltipBg: 'rgba(22, 27, 34, 0.95)'
+            },
+            light: {
+                text: '#24292f',
+                muted: '#57606a',
+                border: '#d0d7de',
+                grid: '#d0d7de',
+                tooltipBg: 'rgba(255, 255, 255, 0.98)'
+            }
+        };
+
+        let currentTheme = 'dark';
+        let lastOption = null;
+
         // --- 初始化 ECharts ---
         const chartDom = document.getElementById('chart-container');
         const loadingMsg = document.getElementById('loading-msg'); // 在 ECharts 初始化前获取引用
         const dataStats = document.getElementById('data-stats');
+        const themeToggleBtn = document.getElementById('theme-toggle-btn');
         const myChart = echarts.init(chartDom, 'dark'); // ECharts 初始化会清空容器内容
 
         // --- 核心逻辑函数 ---
@@ -193,13 +277,15 @@
                 }));
 
                 // 5. 设置图表 Option
+                const theme = THEME_STYLES[currentTheme];
+
                 const option = {
                     backgroundColor: 'transparent',
                     tooltip: {
                         trigger: 'item',
-                        backgroundColor: 'rgba(22, 27, 34, 0.95)',
-                        borderColor: '#30363d',
-                        textStyle: { color: '#c9d1d9' },
+                        backgroundColor: theme.tooltipBg,
+                        borderColor: theme.border,
+                        textStyle: { color: theme.text },
                         padding: 15,
                         formatter: function (params) {
                             const info = params.data.customData;
@@ -224,37 +310,64 @@
                             `;
                         }
                     },
+                    // 工具栏：支持区域缩放、还原等
+                    toolbox: {
+                        right: 20,
+                        top: 15,
+                        feature: {
+                            dataZoom: { yAxisIndex: 'none' }, // 只显示 X 轴缩放按钮
+                            restore: {},
+                            saveAsImage: {}
+                        },
+                        iconStyle: {
+                            borderColor: theme.muted
+                        }
+                    },
                     legend: {
                         data: Object.keys(seriesGroups), // 自动生成图例
                         bottom: 10,
-                        textStyle: { color: '#8b949e' }
+                        textStyle: { color: theme.muted }
                     },
                     grid: { top: '10%', left: '5%', right: '10%', bottom: '15%', containLabel: true },
+                    // 支持鼠标滚轮缩放 / 拖拽平移
+                    dataZoom: [
+                        {
+                            type: 'inside',
+                            xAxisIndex: 0,
+                            filterMode: 'none'
+                        },
+                        {
+                            type: 'inside',
+                            yAxisIndex: 0,
+                            filterMode: 'none'
+                        }
+                    ],
                     xAxis: {
                         type: 'time',
                         name: '时间 (Time)',
-                        nameTextStyle: { color: '#8b949e' },
+                        nameTextStyle: { color: theme.muted },
                         axisLabel: { 
-                            color: '#8b949e', 
+                            color: theme.muted, 
                             formatter: function(value) {
                                 const date = new Date(value);
                                 return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0');
                             }
                         },
-                        splitLine: { show: true, lineStyle: { color: '#30363d', type: 'dashed' } }
+                        splitLine: { show: true, lineStyle: { color: theme.grid, type: 'dashed' } }
                     },
                     yAxis: {
                         type: 'value',
                         name: '科研价值 / 效率 (Value)',
-                        nameTextStyle: { color: '#8b949e' },
+                        nameTextStyle: { color: theme.muted },
                         axisLabel: { show: false }, // 隐藏具体数值，强调相对性
-                        splitLine: { show: true, lineStyle: { color: '#30363d', opacity: 0.3 } },
+                        splitLine: { show: true, lineStyle: { color: theme.grid, opacity: 0.3 } },
                         min: 2, max: 11
                     },
                     series: seriesList
                 };
 
                 // 渲染
+                lastOption = option;
                 myChart.setOption(option);
                 if (loadingMsg) {
                     loadingMsg.style.display = 'none';
@@ -272,6 +385,43 @@
                     loadingMsg.style.display = 'block';
                 }
             }
+        }
+
+        // --- 主题切换逻辑 ---
+        function applyThemeToChart() {
+            if (!lastOption) return;
+            const theme = THEME_STYLES[currentTheme];
+            myChart.setOption({
+                tooltip: {
+                    backgroundColor: theme.tooltipBg,
+                    borderColor: theme.border,
+                    textStyle: { color: theme.text }
+                },
+                legend: {
+                    textStyle: { color: theme.muted }
+                },
+                toolbox: {
+                    iconStyle: { borderColor: theme.muted }
+                },
+                xAxis: {
+                    nameTextStyle: { color: theme.muted },
+                    axisLabel: { color: theme.muted },
+                    splitLine: { lineStyle: { color: theme.grid, type: 'dashed' } }
+                },
+                yAxis: {
+                    nameTextStyle: { color: theme.muted },
+                    splitLine: { lineStyle: { color: theme.grid, opacity: 0.3 } }
+                }
+            });
+        }
+
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', () => {
+                currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                document.body.classList.toggle('light-theme', currentTheme === 'light');
+                themeToggleBtn.textContent = currentTheme === 'dark' ? '切换为浅色背景' : '切换为夜间背景';
+                applyThemeToChart();
+            });
         }
 
         // --- 启动 ---
