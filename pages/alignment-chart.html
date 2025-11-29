@@ -468,25 +468,44 @@
             };
         }
 
-        // 查找基于相同实验条件复现的数据点
-        function findSimilarPoints(currentItem, allData) {
-            // 基于相同的实验条件（conditions）查找复现实验
-            return allData
-                .filter(item => 
-                    item.id !== currentItem.id && 
-                    item.conditions === currentItem.conditions
-                )
-                .slice(0, 10) // 最多返回10个复现实验点
-                .map(item => ({
-                    id: item.id,
-                    name: item.name,
-                    date: item.date,
-                    cluster: item.cluster,
-                    domain: item.domain,
-                    value: item.value,
-                    conditions: item.conditions,
-                    result: item.result
-                }));
+        // 查找基于相同实验条件复现的验证实验数据点
+        function findSimilarPoints(currentItem) {
+            let modelVerificationData = [];
+            
+            // 尝试多种可能的 key 格式来匹配 verificationData
+            if (currentItem.id && verificationData[currentItem.id]) {
+                modelVerificationData = verificationData[currentItem.id];
+            } else {
+                // 尝试通过 name 匹配（转换为小写，替换空格为下划线，移除特殊字符）
+                const nameKey = currentItem.name.toLowerCase()
+                    .replace(/\s+/g, '_')
+                    .replace(/[^a-z0-9_]/g, '');
+                
+                if (verificationData[nameKey]) {
+                    modelVerificationData = verificationData[nameKey];
+                } else {
+                    // 尝试直接使用 id（如果存在）
+                    const idKey = currentItem.id ? currentItem.id.toLowerCase() : '';
+                    if (idKey && verificationData[idKey]) {
+                        modelVerificationData = verificationData[idKey];
+                    }
+                }
+            }
+            
+            // 基于相同的实验条件（conditions）过滤验证实验
+            const filteredByConditions = modelVerificationData.filter(item =>
+                item.conditions === currentItem.conditions
+            );
+            
+            // 按验证级别分组
+            const verificationByLevel = { A: [], B: [], C: [] };
+            filteredByConditions.forEach(vItem => {
+                if (vItem.verificationLevel && verificationByLevel[vItem.verificationLevel]) {
+                    verificationByLevel[vItem.verificationLevel].push(vItem);
+                }
+            });
+            
+            return verificationByLevel;
         }
 
         // --- 核心逻辑函数 ---
@@ -720,8 +739,25 @@
 
         // 显示详情模态框（内部函数）
         async function _showDetailModalInternal(item) {
-            const verification = generateVerificationData(item);
-            const similarPoints = await findSimilarPoints(item, allData);
+            // 查找验证数据
+            const verificationByLevel = findSimilarPoints(item);
+            
+            // 计算各级别的数量
+            const verification = {
+                counts: {
+                    A: verificationByLevel.A.length,
+                    B: verificationByLevel.B.length,
+                    C: verificationByLevel.C.length
+                },
+                total: verificationByLevel.A.length + verificationByLevel.B.length + verificationByLevel.C.length
+            };
+            
+            // 如果没有找到验证数据，使用模拟数据
+            if (verification.total === 0) {
+                const mockVerification = generateVerificationData(item);
+                verification.counts = mockVerification.counts;
+                verification.total = mockVerification.total;
+            }
             
             document.getElementById('modal-title').textContent = item.name;
             
@@ -867,7 +903,7 @@
             `;
             
             // 渲染每个级别的验证实验列表
-            renderVerificationLevels(similarPoints, item);
+            renderVerificationLevels(verificationByLevel, item);
             
             // 绑定验证等级点击事件（展开/收起）
             document.querySelectorAll('.verification-badge').forEach(badge => {
@@ -886,7 +922,7 @@
         }
 
         // 渲染所有级别的验证实验列表
-        function renderVerificationLevels(similarPoints, currentItem) {
+        function renderVerificationLevels(verificationByLevel, currentItem) {
             const levelDescriptions = {
                 'A': '完整实验（包含完整代码和实验细节）',
                 'B': '实验代码不全',
@@ -897,7 +933,7 @@
             
             levels.forEach(level => {
                 const listContainer = document.getElementById(`level-${level.toLowerCase()}-experiments`);
-                const filteredPoints = similarPoints.filter(p => p.verificationLevel === level);
+                const filteredPoints = verificationByLevel[level] || [];
                 
                 if (filteredPoints.length === 0) {
                     listContainer.innerHTML = `
@@ -947,7 +983,13 @@
         // 关闭模态框
         function closeModal() {
             detailModal.classList.remove('active');
-            document.getElementById('similar-points-list').classList.remove('active');
+            // 关闭所有级别的展开列表
+            document.querySelectorAll('.verification-experiments-list').forEach(list => {
+                list.classList.remove('active');
+            });
+            document.querySelectorAll('.verification-badge').forEach(badge => {
+                badge.classList.remove('expanded');
+            });
         }
 
         // 绑定关闭按钮
