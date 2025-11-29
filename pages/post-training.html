@@ -4,92 +4,279 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>后训练对齐领域地图</title>
-    <link rel="stylesheet" href="../styles/map-theme.css">
     <style>
-        .map-area.rl-alignment {
-            top: 22%;
-            left: 22%;
-            width: 32%;
-            height: 42%;
-            clip-path: polygon(8% 0%, 92% 4%, 100% 45%, 88% 86%, 18% 100%, 0% 62%, 3% 20%);
-            background: linear-gradient(135deg, #58a6ff 0%, #3fb950 100%);
+        :root {
+            --bg-color: #f4f6f9;
+            --text-main: #2c3e50;
+            --text-light: #7f8c8d;
+            --col-eng: #2980b9;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: var(--text-main);
+        }
+
+        .breadcrumb {
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        .breadcrumb a {
+            color: var(--col-eng);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px 0;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        p.subtitle {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+
+        .map-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            cursor: pointer;
+            opacity: 0;
+            animation: fadeIn 0.5s forwards;
+            border-top: 5px solid var(--col-eng);
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .subject-code {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--col-eng);
+            opacity: 0.6;
+        }
+
+        .subject-icon {
+            font-size: 1.5rem;
+        }
+
+        .card-body {
+            padding: 0 20px 20px 20px;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            margin: 0 0 10px 0;
+            font-weight: 700;
+        }
+
+        .card-desc {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag {
+            font-size: 0.8rem;
+            padding: 4px 10px;
+            border-radius: 6px;
+            background-color: #f0f2f5;
+            color: #555;
+            transition: background 0.2s;
         }
         
-        .map-area.direct-alignment {
-            top: 15%;
-            right: 18%;
-            width: 30%;
-            height: 38%;
-            clip-path: polygon(20% 0%, 100% 6%, 98% 52%, 84% 94%, 18% 100%, 0% 64%);
-            background: linear-gradient(135deg, #a371f7 0%, #f85149 100%);
+        .card:hover .tag {
+            background-color: rgba(0,0,0,0.05);
         }
-        
-        .map-area.ai-feedback {
-            bottom: 20%;
-            left: 15%;
-            width: 32%;
-            height: 34%;
-            clip-path: polygon(0% 26%, 36% 0%, 76% 5%, 100% 34%, 94% 82%, 52% 100%, 6% 96%);
-            background: linear-gradient(135deg, #ffb6c1 0%, #e3b341 100%);
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        /* 返回首页按钮 */
+        .back-home {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background: white;
+            border-radius: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 600;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .back-home:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        @media (max-width: 768px) {
+            .map-grid {
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+                gap: 20px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 15px;
+            }
+            .map-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            h1 { 
+                font-size: 1.8rem;
+                letter-spacing: 1px;
+            }
+            p.subtitle {
+                font-size: 1rem;
+            }
+            .back-home {
+                top: 10px;
+                left: 10px;
+                padding: 8px 16px;
+                font-size: 0.9rem;
+            }
+            .card-header {
+                padding: 15px;
+            }
+            .card-body {
+                padding: 0 15px 15px 15px;
+            }
+            .card-title {
+                font-size: 1.3rem;
+            }
+            .breadcrumb {
+                font-size: 0.85rem;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- 面包屑导航 -->
-    <div class="breadcrumb">
-        <a href="../home.html">首页</a>
-        <span> / </span>
-        <a href="engineering.html">工科</a>
-        <span> / </span>
-        <a href="computer.html">计算机</a>
-        <span> / </span>
-        <a href="llm-algorithm.html">大模型算法</a>
-        <span> / </span>
-        <span class="current">后训练对齐</span>
-    </div>
 
-    <!-- 标题区 -->
-    <h1>后训练对齐领域地图</h1>
-    <div class="subtitle">
-        探索后训练对齐各技术方向<br>
-        点击区域进入相应技术图谱
-    </div>
+<a href="../home.html" class="back-home">🏠 首页</a>
 
-    <!-- 主题切换 -->
-    <div class="theme-toggle">
-        <button id="theme-toggle-btn">切换为浅色背景</button>
-    </div>
+<div class="breadcrumb">
+    <a href="../home.html">首页</a>
+    <span> / </span>
+    <a href="engineering.html">工科</a>
+    <span> / </span>
+    <a href="computer.html">计算机</a>
+    <span> / </span>
+    <a href="llm-algorithm.html">大模型算法</a>
+    <span> / </span>
+    <span class="current">后训练对齐</span>
+</div>
 
-    <!-- 地图容器 -->
-    <div class="map-container">
-        <!-- 强化学习对齐区域 - 可点击 -->
-        <div class="map-area rl-alignment clickable" onclick="window.location.href='alignment-chart.html'">
-            <div class="area-label">强化学习对齐</div>
-        </div>
-        
-        <!-- 直接对齐区域 - 占位 -->
-        <div class="map-area direct-alignment placeholder">
-            <div class="area-label">直接对齐</div>
-        </div>
-        
-        <!-- AI反馈区域 - 占位 -->
-        <div class="map-area ai-feedback placeholder">
-            <div class="area-label">AI反馈</div>
-        </div>
-    </div>
+<header>
+    <h1>🎯 后训练对齐领域地图</h1>
+    <p class="subtitle">探索后训练对齐各技术方向</p>
+</header>
 
-    <script>
-        const themeToggleBtn = document.getElementById('theme-toggle-btn');
-        let currentTheme = 'dark';
+<div class="map-grid" id="grid">
+    <!-- 卡片将通过 JS 动态生成 -->
+</div>
 
-        if (themeToggleBtn) {
-            themeToggleBtn.addEventListener('click', () => {
-                currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                document.body.classList.toggle('light-theme', currentTheme === 'light');
-                themeToggleBtn.textContent = currentTheme === 'dark' ? '切换为浅色背景' : '切换为夜间背景';
-            });
+<script>
+    const subjects = [
+        {
+            code: "RL", name: "强化学习对齐", icon: "🎮",
+            desc: "使用强化学习技术进行模型对齐，包括RLHF等方法。",
+            sub: ["RLHF", "PPO", "奖励模型", "策略优化"],
+            link: "alignment-chart.html"
+        },
+        {
+            code: "DA", name: "直接对齐", icon: "⚡",
+            desc: "直接优化模型偏好，无需强化学习，包括DPO、KTO等方法。",
+            sub: ["DPO", "KTO", "SimPO", "ORPO"],
+            link: "#"
+        },
+        {
+            code: "AI", name: "AI反馈", icon: "🤖",
+            desc: "使用AI模型生成反馈进行对齐，包括RLAIF等方法。",
+            sub: ["RLAIF", "Constitutional AI", "AI奖励模型"],
+            link: "#"
         }
-    </script>
+    ];
+
+    const grid = document.getElementById('grid');
+
+    subjects.forEach((sub, index) => {
+        const card = document.createElement('a');
+        card.href = sub.link || '#';
+        card.className = 'card';
+        card.style.animationDelay = `${index * 0.05}s`;
+
+        const tagsHtml = sub.sub.map(tag => `<span class="tag">${tag}</span>`).join('');
+
+        card.innerHTML = `
+            <div class="card-header">
+                <span class="subject-code">${sub.code}</span>
+                <span class="subject-icon">${sub.icon}</span>
+            </div>
+            <div class="card-body">
+                <h3 class="card-title">${sub.name}</h3>
+                <p class="card-desc">${sub.desc}</p>
+                <div class="tags">
+                    ${tagsHtml}
+                </div>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+
+</script>
+
 </body>
 </html>
-

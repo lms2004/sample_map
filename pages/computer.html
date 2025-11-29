@@ -4,47 +4,209 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>计算机领域地图</title>
-    <link rel="stylesheet" href="../styles/map-theme.css">
     <style>
-        .map-area.llm-algorithm {
-            top: 18%;
-            left: 18%;
-            width: 32%;
-            height: 38%;
-            clip-path: polygon(12% 0%, 92% 6%, 100% 48%, 88% 88%, 22% 100%, 0% 58%, 4% 18%);
-            background: linear-gradient(135deg, #58a6ff 0%, #3fb950 100%);
+        :root {
+            --bg-color: #f4f6f9;
+            --text-main: #2c3e50;
+            --text-light: #7f8c8d;
+            --col-eng: #2980b9;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: var(--text-main);
+        }
+
+        .breadcrumb {
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        .breadcrumb a {
+            color: var(--col-eng);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px 0;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        p.subtitle {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+
+        .map-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            cursor: pointer;
+            opacity: 0;
+            animation: fadeIn 0.5s forwards;
+            border-top: 5px solid var(--col-eng);
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .subject-code {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--col-eng);
+            opacity: 0.6;
+        }
+
+        .subject-icon {
+            font-size: 1.5rem;
+        }
+
+        .card-body {
+            padding: 0 20px 20px 20px;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            margin: 0 0 10px 0;
+            font-weight: 700;
+        }
+
+        .card-desc {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag {
+            font-size: 0.8rem;
+            padding: 4px 10px;
+            border-radius: 6px;
+            background-color: #f0f2f5;
+            color: #555;
+            transition: background 0.2s;
         }
         
-        .map-area.systems {
-            top: 12%;
-            right: 12%;
-            width: 30%;
-            height: 34%;
-            clip-path: polygon(22% 0%, 100% 10%, 96% 52%, 82% 90%, 20% 100%, 0% 62%);
-            background: linear-gradient(135deg, #a371f7 0%, #f85149 100%);
+        .card:hover .tag {
+            background-color: rgba(0,0,0,0.05);
         }
-        
-        .map-area.network {
-            bottom: 22%;
-            left: 10%;
-            width: 32%;
-            height: 32%;
-            clip-path: polygon(0% 28%, 38% 0%, 78% 6%, 100% 38%, 90% 84%, 48% 100%, 10% 92%);
-            background: linear-gradient(135deg, #ffb6c1 0%, #e3b341 100%);
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
         }
-        
-        .map-area.security {
-            bottom: 18%;
-            right: 15%;
-            width: 34%;
-            height: 35%;
-            clip-path: polygon(20% 0%, 90% 5%, 100% 44%, 94% 88%, 45% 100%, 6% 74%, 0% 35%);
-            background: linear-gradient(135deg, #f85149 0%, #ffb6c1 100%);
+
+        /* 返回首页按钮 */
+        .back-home {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background: white;
+            border-radius: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 600;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .back-home:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        @media (max-width: 768px) {
+            .map-grid {
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+                gap: 20px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 15px;
+            }
+            .map-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            h1 { 
+                font-size: 1.8rem;
+                letter-spacing: 1px;
+            }
+            p.subtitle {
+                font-size: 1rem;
+            }
+            .back-home {
+                top: 10px;
+                left: 10px;
+                padding: 8px 16px;
+                font-size: 0.9rem;
+            }
+            .card-header {
+                padding: 15px;
+            }
+            .card-body {
+                padding: 0 15px 15px 15px;
+            }
+            .card-title {
+                font-size: 1.3rem;
+            }
+            .breadcrumb {
+                font-size: 0.85rem;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- 面包屑导航 -->
+
+<a href="../home.html" class="back-home">🏠 首页</a>
+
     <div class="breadcrumb">
         <a href="../home.html">首页</a>
         <span> / </span>
@@ -53,53 +215,70 @@
         <span class="current">计算机</span>
     </div>
 
-    <!-- 标题区 -->
-    <h1>计算机领域地图</h1>
-    <div class="subtitle">
-        探索计算机各细分方向<br>
-        点击区域进入相应方向
+<header>
+    <h1>💻 计算机领域地图</h1>
+    <p class="subtitle">探索计算机各细分方向</p>
+</header>
+
+<div class="map-grid" id="grid">
+    <!-- 卡片将通过 JS 动态生成 -->
     </div>
 
-    <!-- 主题切换 -->
-    <div class="theme-toggle">
-        <button id="theme-toggle-btn">切换为浅色背景</button>
-    </div>
-
-    <!-- 地图容器 -->
-    <div class="map-container">
-        <!-- 大模型算法区域 - 可点击 -->
-        <div class="map-area llm-algorithm clickable" onclick="window.location.href='llm-algorithm.html'">
-            <div class="area-label">大模型算法</div>
-        </div>
-        
-        <!-- 系统区域 - 占位 -->
-        <div class="map-area systems placeholder">
-            <div class="area-label">系统</div>
-        </div>
-        
-        <!-- 网络区域 - 占位 -->
-        <div class="map-area network placeholder">
-            <div class="area-label">网络</div>
-        </div>
-        
-        <!-- 安全区域 - 占位 -->
-        <div class="map-area security placeholder">
-            <div class="area-label">安全</div>
-        </div>
-    </div>
-
-    <script>
-        const themeToggleBtn = document.getElementById('theme-toggle-btn');
-        let currentTheme = 'dark';
-
-        if (themeToggleBtn) {
-            themeToggleBtn.addEventListener('click', () => {
-                currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                document.body.classList.toggle('light-theme', currentTheme === 'light');
-                themeToggleBtn.textContent = currentTheme === 'dark' ? '切换为浅色背景' : '切换为夜间背景';
-            });
+<script>
+    const subjects = [
+        {
+            code: "LLM", name: "大模型算法", icon: "🤖",
+            desc: "研究大规模语言模型的训练、优化和应用。",
+            sub: ["基础模型", "后训练对齐", "应用研究", "推理优化"],
+            link: "llm-algorithm.html"
+        },
+        {
+            code: "SYS", name: "系统", icon: "⚙️",
+            desc: "研究计算机系统的设计、实现和优化。",
+            sub: ["操作系统", "分布式系统", "数据库系统", "存储系统"],
+            link: "#"
+        },
+        {
+            code: "NET", name: "网络", icon: "🌐",
+            desc: "研究计算机网络协议、架构和安全。",
+            sub: ["网络协议", "网络安全", "网络优化", "移动网络"],
+            link: "#"
+        },
+        {
+            code: "SEC", name: "安全", icon: "🔒",
+            desc: "研究信息安全、密码学和系统安全。",
+            sub: ["密码学", "网络安全", "系统安全", "隐私保护"],
+            link: "#"
         }
+    ];
+
+    const grid = document.getElementById('grid');
+
+    subjects.forEach((sub, index) => {
+        const card = document.createElement('a');
+        card.href = sub.link || '#';
+        card.className = 'card';
+        card.style.animationDelay = `${index * 0.05}s`;
+
+        const tagsHtml = sub.sub.map(tag => `<span class="tag">${tag}</span>`).join('');
+
+        card.innerHTML = `
+            <div class="card-header">
+                <span class="subject-code">${sub.code}</span>
+                <span class="subject-icon">${sub.icon}</span>
+        </div>
+            <div class="card-body">
+                <h3 class="card-title">${sub.name}</h3>
+                <p class="card-desc">${sub.desc}</p>
+                <div class="tags">
+                    ${tagsHtml}
+        </div>
+    </div>
+        `;
+        grid.appendChild(card);
+    });
+
     </script>
+
 </body>
 </html>
-

@@ -4,103 +4,417 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>学科知识地图 - 首页</title>
-    <link rel="stylesheet" href="styles/map-theme.css">
     <style>
-        .map-area {
-            background: linear-gradient(135deg, #58a6ff 0%, #3fb950 100%);
+        :root {
+            --bg-color: #f4f6f9;
+            --text-main: #2c3e50;
+            --text-light: #7f8c8d;
+            
+            /* 学科颜色变量 */
+            --col-science: #8e44ad; /* 理学 - 紫色 */
+            --col-eng: #2980b9;     /* 工学 - 蓝色 */
+            --col-med: #27ae60;     /* 医学 - 绿色 */
+            --col-agri: #16a085;    /* 农学 - 青色 */
+            --col-arts: #c0392b;    /* 文学/艺术 - 红色 */
+            --col-soc: #d35400;     /* 社科(法/教/管/经) - 橙色 */
+            --col-human: #795548;   /* 人文(史/哲) - 褐色 */
+        }
+
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: var(--text-main);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px 0;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        p.subtitle {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+
+        /* 筛选控制器 */
+        .filter-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .filter-btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--text-main);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        /* 网格布局 */
+        .map-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* 卡片样式 */
+        .card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            cursor: pointer;
+            opacity: 0;
+            animation: fadeIn 0.5s forwards;
+            border-top: 5px solid #ccc;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .subject-code {
+            font-size: 0.9rem;
+            font-weight: bold;
+            opacity: 0.6;
+        }
+
+        .subject-icon {
+            font-size: 1.5rem;
+        }
+
+        .card-body {
+            padding: 0 20px 20px 20px;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            margin: 0 0 10px 0;
+            font-weight: 700;
+        }
+
+        .card-desc {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        /* 标签区域 */
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag {
+            font-size: 0.8rem;
+            padding: 4px 10px;
+            border-radius: 6px;
+            background-color: #f0f2f5;
+            color: #555;
+            transition: background 0.2s;
         }
         
-        .map-area.engineering {
-            top: 20%;
-            left: 15%;
-            width: 35%;
-            height: 40%;
-            clip-path: polygon(10% 0%, 90% 5%, 100% 40%, 85% 80%, 20% 100%, 0% 60%, 5% 20%);
-            background: linear-gradient(135deg, #58a6ff 0%, #3fb950 100%);
+        .card:hover .tag {
+            background-color: rgba(0,0,0,0.05);
         }
+
+        /* 颜色定义类 */
+        .type-science { border-color: var(--col-science); }
+        .type-science .subject-code { color: var(--col-science); }
         
-        .map-area.science {
-            top: 10%;
-            right: 10%;
-            width: 30%;
-            height: 35%;
-            clip-path: polygon(20% 0%, 100% 10%, 95% 50%, 80% 90%, 15% 100%, 0% 60%);
-            background: linear-gradient(135deg, #a371f7 0%, #f85149 100%);
+        .type-eng { border-color: var(--col-eng); }
+        .type-eng .subject-code { color: var(--col-eng); }
+        
+        .type-med { border-color: var(--col-med); }
+        .type-med .subject-code { color: var(--col-med); }
+
+        .type-arts { border-color: var(--col-arts); }
+        .type-arts .subject-code { color: var(--col-arts); }
+
+        .type-soc { border-color: var(--col-soc); }
+        .type-soc .subject-code { color: var(--col-soc); }
+
+        .type-human { border-color: var(--col-human); }
+        .type-human .subject-code { color: var(--col-human); }
+        
+        .type-agri { border-color: var(--col-agri); }
+        .type-agri .subject-code { color: var(--col-agri); }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
         }
-        
-        .map-area.liberal-arts {
-            bottom: 15%;
-            left: 10%;
-            width: 28%;
-            height: 30%;
-            clip-path: polygon(0% 20%, 30% 0%, 70% 5%, 100% 30%, 90% 80%, 50% 100%, 10% 90%);
-            background: linear-gradient(135deg, #ffb6c1 0%, #e3b341 100%);
+
+        /* 返回首页按钮 */
+        .back-home {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background: white;
+            border-radius: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 600;
+            transition: all 0.3s ease;
+            z-index: 1000;
         }
-        
-        .map-area.medicine {
-            bottom: 10%;
-            right: 15%;
-            width: 32%;
-            height: 35%;
-            clip-path: polygon(15% 0%, 85% 5%, 100% 40%, 90% 85%, 40% 100%, 5% 70%, 0% 30%);
-            background: linear-gradient(135deg, #f85149 0%, #ffb6c1 100%);
+
+        .back-home:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .map-grid {
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+                gap: 20px;
+            }
+            .filter-container {
+                gap: 8px;
+            }
+            .filter-btn {
+                padding: 6px 16px;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 15px;
+            }
+            .map-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            h1 { 
+                font-size: 1.8rem;
+                letter-spacing: 1px;
+            }
+            p.subtitle {
+                font-size: 1rem;
+            }
+            .back-home {
+                top: 10px;
+                left: 10px;
+                padding: 8px 16px;
+                font-size: 0.9rem;
+            }
+            .card-header {
+                padding: 15px;
+            }
+            .card-body {
+                padding: 0 15px 15px 15px;
+            }
+            .card-title {
+                font-size: 1.3rem;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- 面包屑导航 -->
-    <div class="breadcrumb">
-        <span class="current">首页</span>
+
+<a href="home.html" class="back-home">🏠 首页</a>
+
+<header>
+    <h1>🎓 学科知识地图</h1>
+    <p class="subtitle">探索不同学科领域的知识结构</p>
+</header>
+
+<div class="filter-container" id="filters">
+    <button class="filter-btn active" data-filter="all">全部</button>
+    <button class="filter-btn" data-filter="eng">工科 (Engineering)</button>
+    <button class="filter-btn" data-filter="science">理科 (Science)</button>
+    <button class="filter-btn" data-filter="soc">社科 (Social Sciences)</button>
+    <button class="filter-btn" data-filter="arts">人文艺术 (Arts & Humanities)</button>
+    <button class="filter-btn" data-filter="med">医学/农学 (Med & Agri)</button>
     </div>
 
-    <!-- 标题区 -->
-    <h1>学科知识地图</h1>
-    <div class="subtitle">
-        探索不同学科领域的知识结构<br>
-        点击区域进入相应领域
+<div class="map-grid" id="grid">
+    <!-- 卡片将通过 JS 动态生成 -->
     </div>
 
-    <!-- 主题切换 -->
-    <div class="theme-toggle">
-        <button id="theme-toggle-btn">切换为浅色背景</button>
-    </div>
-
-    <!-- 地图容器 -->
-    <div class="map-container">
-        <!-- 工科区域 - 可点击 -->
-        <div class="map-area engineering clickable" onclick="window.location.href='pages/engineering.html'">
-            <div class="area-label">工科</div>
-        </div>
+<script>
+    // 学科数据源 (包含主要学科门类及链接)
+    const subjects = [
+        // --- 工科 ---
+        {
+            code: "08", name: "工学", type: "eng", icon: "⚙️",
+            desc: "工程技术的总称，强调应用与实践，是现代工业的基石。",
+            sub: ["计算机科学", "电子信息", "机械工程", "土木工程", "电气工程", "材料科学", "航空航天", "化学工程", "生物工程", "建筑学"],
+            link: "pages/engineering.html"
+        },
         
-        <!-- 理科区域 - 占位 -->
-        <div class="map-area science placeholder">
-            <div class="area-label">理科</div>
-        </div>
-        
-        <!-- 文科区域 - 占位 -->
-        <div class="map-area liberal-arts placeholder">
-            <div class="area-label">文科</div>
-        </div>
-        
-        <!-- 医学区域 - 占位 -->
-        <div class="map-area medicine placeholder">
-            <div class="area-label">医学</div>
-        </div>
-    </div>
+        // --- 理科 ---
+        {
+            code: "07", name: "理学", type: "science", icon: "🧪",
+            desc: "研究自然物质运动基本规律的科学，强调理论与基础研究。",
+            sub: ["数学", "物理学", "化学", "生物学", "天文学", "地理学", "大气科学", "海洋科学", "地质学", "心理学", "统计学"],
+            link: "#"
+        },
 
-    <script>
-        // 主题切换功能
-        const themeToggleBtn = document.getElementById('theme-toggle-btn');
-        let currentTheme = 'dark';
+        // --- 社科 ---
+        {
+            code: "02", name: "经济学", type: "soc", icon: "📈",
+            desc: "研究资源配置、生产、分配和消费等经济活动的规律。",
+            sub: ["理论经济学", "应用经济学", "金融学", "国际贸易", "财政学"],
+            link: "#"
+        },
+        {
+            code: "03", name: "法学", type: "soc", icon: "⚖️",
+            desc: "研究法律、法律现象及其规律的社会科学。",
+            sub: ["法学", "政治学", "社会学", "民族学", "马克思主义理论", "公安学"],
+            link: "#"
+        },
+        {
+            code: "04", name: "教育学", type: "soc", icon: "📚",
+            desc: "研究教育现象和教育问题，揭示教育规律。",
+            sub: ["教育学", "心理学(教育方向)", "体育学"],
+            link: "#"
+        },
+        {
+            code: "12", name: "管理学", type: "soc", icon: "📊",
+            desc: "研究管理活动的基本规律和一般方法。",
+            sub: ["管理科学", "工商管理", "农林经济管理", "公共管理", "图书情报"],
+            link: "#"
+        },
 
-        if (themeToggleBtn) {
-            themeToggleBtn.addEventListener('click', () => {
-                currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                document.body.classList.toggle('light-theme', currentTheme === 'light');
-                themeToggleBtn.textContent = currentTheme === 'dark' ? '切换为浅色背景' : '切换为夜间背景';
-            });
+        // --- 人文/艺术 ---
+        {
+            code: "05", name: "文学", type: "arts", icon: "✒️",
+            desc: "研究语言、文学、新闻传播等人类文化形态。",
+            sub: ["中国语言文学", "外国语言文学", "新闻传播学"],
+            link: "#"
+        },
+        {
+            code: "01", name: "哲学", type: "human", icon: "🤔",
+            desc: "关于世界观和方法论的理论体系，探究世界本质。",
+            sub: ["哲学"],
+            link: "#"
+        },
+        {
+            code: "06", name: "历史学", type: "human", icon: "🏛️",
+            desc: "研究人类社会过去发生的事件及其演变规律。",
+            sub: ["考古学", "中国史", "世界史"],
+            link: "#"
+        },
+        {
+            code: "13", name: "艺术学", type: "arts", icon: "🎨",
+            desc: "研究艺术创作、艺术历史及艺术理论。",
+            sub: ["艺术理论", "音乐与舞蹈", "戏剧与影视", "美术学", "设计学"],
+            link: "#"
+        },
+
+        // --- 医/农 ---
+        {
+            code: "10", name: "医学", type: "med", icon: "⚕️",
+            desc: "处理人健康定义中人的生理处于良好状态相关问题。",
+            sub: ["基础医学", "临床医学", "口腔医学", "公共卫生", "中医学", "药学", "护理学"],
+            link: "#"
+        },
+        {
+            code: "09", name: "农学", type: "agri", icon: "🌾",
+            desc: "研究与农作物生产相关领域的科学。",
+            sub: ["作物学", "园艺学", "农业资源", "植物保护", "畜牧学", "兽医学", "林学"],
+            link: "#"
         }
+    ];
+
+    const grid = document.getElementById('grid');
+    const filterBtns = document.querySelectorAll('.filter-btn');
+
+    // 渲染函数
+    function renderCards(filterType) {
+        grid.innerHTML = '';
+        
+        const filteredSubjects = filterType === 'all' 
+            ? subjects 
+            : subjects.filter(s => {
+                if(filterType === 'arts') return s.type === 'arts' || s.type === 'human';
+                if(filterType === 'med') return s.type === 'med' || s.type === 'agri';
+                return s.type === filterType;
+            });
+
+        filteredSubjects.forEach((sub, index) => {
+            const card = document.createElement('a');
+            card.href = sub.link || '#';
+            card.className = `card type-${sub.type}`;
+            card.style.animationDelay = `${index * 0.05}s`;
+
+            // 生成子标签HTML
+            const tagsHtml = sub.sub.map(tag => `<span class="tag">${tag}</span>`).join('');
+
+            card.innerHTML = `
+                <div class="card-header">
+                    <span class="subject-code">门类代码: ${sub.code}</span>
+                    <span class="subject-icon">${sub.icon}</span>
+        </div>
+                <div class="card-body">
+                    <h3 class="card-title">${sub.name}</h3>
+                    <p class="card-desc">${sub.desc}</p>
+                    <div class="tags">
+                        ${tagsHtml}
+        </div>
+    </div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    // 绑定点击事件
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            filterBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderCards(btn.dataset.filter);
+        });
+    });
+
+    // 初始化渲染
+    renderCards('all');
+
     </script>
+
 </body>
 </html>
-
