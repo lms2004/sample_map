@@ -456,6 +456,7 @@
         let lastOption = null;
         let allData = []; // 存储所有数据用于查找相似点
         let verificationData = {}; // 存储验证实验数据
+        let commentsData = {}; // 存储评论数据
 
         // --- 初始化 ECharts ---
         const chartDom = document.getElementById('chart-container');
@@ -552,6 +553,16 @@
                     }
                 } catch (e) {
                     console.warn('验证实验数据加载失败，将使用模拟数据:', e);
+                }
+                
+                // 加载评论数据（从同目录加载）
+                try {
+                    const commentsResponse = await fetch(`comments-data.json?v=${Date.now()}`);
+                    if (commentsResponse.ok) {
+                        commentsData = await commentsResponse.json();
+                    }
+                } catch (e) {
+                    console.warn('评论数据加载失败:', e);
                 }
 
                 const seriesGroups = {};
@@ -840,23 +851,31 @@
                 <div class="detail-section">
                     <div class="section-title">💬 评论区</div>
                     <div class="section-content">
-                        <div style="margin-bottom: 15px; font-size: 13px; color: #57606a;">
-                            <span style="color: #1a7f37; font-weight: 600;">✓ 实验复现状态: 已验证</span>
-                        </div>
-                        <div class="comment-section">
-                            <div class="comment-item">
-                                <div class="comment-author">@researcher_001</div>
-                                <div class="comment-text">已成功复现实验结果，代码和参数设置与论文描述一致。</div>
-                            </div>
-                            <div class="comment-item">
-                                <div class="comment-author">@ml_engineer</div>
-                                <div class="comment-text">实验结果可复现，但需要较大的计算资源。建议使用GPU集群。</div>
-                            </div>
-                            <div class="comment-item">
-                                <div class="comment-author">@student_2024</div>
-                                <div class="comment-text">部分超参数需要根据具体数据集调整，但整体方法有效。</div>
-                            </div>
-                        </div>
+                        ${(() => {
+                            const itemComments = commentsData[item.id] || {};
+                            const status = itemComments.reproductionStatus || '已验证';
+                            const comments = itemComments.comments || [];
+                            
+                            return `
+                                <div style="margin-bottom: 15px; font-size: 13px; color: #57606a;">
+                                    <span style="color: #1a7f37; font-weight: 600;">✓ 实验复现状态: ${status}</span>
+                                </div>
+                                <div class="comment-section">
+                                    ${comments.length > 0 ? comments.map(comment => `
+                                        <div class="comment-item">
+                                            <div class="comment-author">@${comment.author || '匿名用户'}</div>
+                                            <div class="comment-text">${comment.text || comment.content || ''}</div>
+                                            ${comment.date ? `<div style="font-size: 11px; color: #8b949e; margin-top: 4px;">${comment.date}</div>` : ''}
+                                        </div>
+                                    `).join('') : `
+                                        <div style="padding: 20px; text-align: center; color: #8b949e;">
+                                            <p>暂无评论</p>
+                                            <p style="font-size: 12px; margin-top: 8px;">欢迎添加评论和反馈</p>
+                                        </div>
+                                    `}
+                                </div>
+                            `;
+                        })()}
                     </div>
                 </div>
 

@@ -1,0 +1,68 @@
+{
+  "instructgpt": {
+    "reproductionStatus": "已验证",
+    "comments": [
+      {
+        "author": "researcher_001",
+        "text": "已成功复现实验结果，代码和参数设置与论文描述一致。",
+        "date": "2022-04-15"
+      },
+      {
+        "author": "ml_engineer",
+        "text": "实验结果可复现，但需要较大的计算资源。建议使用GPU集群。",
+        "date": "2022-05-20"
+      },
+      {
+        "author": "student_2024",
+        "text": "部分超参数需要根据具体数据集调整，但整体方法有效。",
+        "date": "2022-06-10"
+      }
+    ]
+  },
+  "cai_claude1": {
+    "reproductionStatus": "已验证",
+    "comments": [
+      {
+        "author": "ai_researcher",
+        "text": "Constitutional AI 方法很有创新性，用原则而非标签进行对齐的思路值得学习。",
+        "date": "2023-01-10"
+      },
+      {
+        "author": "nlp_engineer",
+        "text": "复现了核心方法，但完整的 Constitution 原则集需要仔细设计。",
+        "date": "2023-02-15"
+      }
+    ]
+  },
+  "gpt4": {
+    "reproductionStatus": "部分验证",
+    "comments": [
+      {
+        "author": "research_team",
+        "text": "GPT-4 的推理能力确实很强，但完整复现需要大量计算资源。",
+        "date": "2023-04-01"
+      },
+      {
+        "author": "ml_practitioner",
+        "text": "仅能复现部分能力，完整模型架构和训练细节未公开。",
+        "date": "2023-05-20"
+      }
+    ]
+  },
+  "o3_mini": {
+    "reproductionStatus": "已验证",
+    "comments": [
+      {
+        "author": "reasoning_researcher",
+        "text": "o3-mini 的推理能力确实很强，速度也很快。高级RL搜索的实现很有参考价值。",
+        "date": "2025-02-15"
+      },
+      {
+        "author": "ai_engineer",
+        "text": "推理对齐方法效果显著，但需要大量计算资源进行训练。",
+        "date": "2025-03-01"
+      }
+    ]
+  }
+}
+
