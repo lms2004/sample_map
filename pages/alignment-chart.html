@@ -155,7 +155,7 @@
             }
         };
 
-        let currentTheme = 'dark';
+        let currentTheme = 'light';
         let lastOption = null;
 
         // --- 初始化 ECharts ---
@@ -163,7 +163,13 @@
         const loadingMsg = document.getElementById('loading-msg');
         const dataStats = document.getElementById('data-stats');
         const themeToggleBtn = document.getElementById('theme-toggle-btn');
-        const myChart = echarts.init(chartDom, 'dark');
+        const myChart = echarts.init(chartDom, 'light');
+        
+        // 默认应用浅色主题
+        document.body.classList.add('light-theme');
+        if (themeToggleBtn) {
+            themeToggleBtn.textContent = '切换为夜间背景';
+        }
 
         // --- 核心逻辑函数 ---
         async function initChart() {
