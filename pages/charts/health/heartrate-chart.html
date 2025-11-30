@@ -751,6 +751,93 @@
             });
         }
 
+        // 填充默认测量详情
+        function fillDefaultMeasurementDetails(item) {
+            // 支持 experimentDetails 或 measurementDetails
+            const details = item.experimentDetails || item.measurementDetails || {};
+            
+            // 清理 undefined 值
+            const cleanDetails = {};
+            Object.keys(details).forEach(key => {
+                if (details[key] !== undefined && details[key] !== 'undefined') {
+                    cleanDetails[key] = details[key];
+                }
+            });
+            
+            const defaults = {
+                device: cleanDetails.device || item.source || "未说明",
+                deviceModel: cleanDetails.deviceModel || "未说明",
+                sensorType: cleanDetails.sensorType || "未说明",
+                samplingRate: cleanDetails.samplingRate || "未说明",
+                measurementTime: cleanDetails.measurementTime || "未说明",
+                duration: cleanDetails.duration || "未说明",
+                timeOfDay: cleanDetails.timeOfDay || "未说明",
+                environment: cleanDetails.environment || item.conditions || "未说明",
+                temperature: cleanDetails.temperature || null,
+                humidity: cleanDetails.humidity || null,
+                location: cleanDetails.location || null,
+                bodyState: cleanDetails.bodyState || item.conditions || "未说明",
+                activityType: cleanDetails.activityType || null,
+                sleepStage: cleanDetails.sleepStage || null,
+                stressLevel: cleanDetails.stressLevel || null,
+                notes: cleanDetails.notes || null
+            };
+            return Object.assign({}, defaults, cleanDetails);
+        }
+
+        // 填充默认身体基本信息
+        function fillDefaultBodyInfo(item) {
+            const bodyInfo = item.bodyInfo || item.personalInfo || {};
+            
+            // 清理 undefined 值
+            const cleanBodyInfo = {};
+            Object.keys(bodyInfo).forEach(key => {
+                if (bodyInfo[key] !== undefined && bodyInfo[key] !== 'undefined') {
+                    cleanBodyInfo[key] = bodyInfo[key];
+                }
+            });
+            
+            const defaults = {
+                gender: cleanBodyInfo.gender || cleanBodyInfo.sex || null, // 性别
+                height: cleanBodyInfo.height || null, // 身高 (cm)
+                weight: cleanBodyInfo.weight || null, // 体重 (kg)
+                bmi: cleanBodyInfo.bmi || null, // BMI
+                bodyCondition: cleanBodyInfo.bodyCondition || cleanBodyInfo.healthGoal || null, // 身体情况：减肥、增肌、运动等
+                fitnessGoal: cleanBodyInfo.fitnessGoal || null, // 健身目标
+                exerciseType: cleanBodyInfo.exerciseType || null, // 运动类型
+                dietPlan: cleanBodyInfo.dietPlan || null, // 饮食计划
+                healthStatus: cleanBodyInfo.healthStatus || null // 健康状况
+            };
+            return Object.assign({}, defaults, cleanBodyInfo);
+        }
+
+        // 填充默认健康指标
+        function fillDefaultHealthMetrics(item) {
+            const metrics = item.metrics || item.healthMetrics || {};
+            
+            // 清理 undefined 值
+            const cleanMetrics = {};
+            Object.keys(metrics).forEach(key => {
+                if (metrics[key] !== undefined && metrics[key] !== 'undefined') {
+                    cleanMetrics[key] = metrics[key];
+                }
+            });
+            
+            const defaults = {
+                heartRate: cleanMetrics.heartRate || item.value || null,
+                heartRateZone: cleanMetrics.heartRateZone || null,
+                zonePercentage: cleanMetrics.zonePercentage || null,
+                exerciseIntensity: cleanMetrics.exerciseIntensity || null,
+                recoveryTime: cleanMetrics.recoveryTime || null,
+                hrv: cleanMetrics.hrv || null,
+                healthAssessment: cleanMetrics.healthAssessment || null,
+                caloriesBurned: cleanMetrics.caloriesBurned || null,
+                additionalHealthMetrics: cleanMetrics.additionalHealthMetrics || cleanMetrics.additionalMetrics || null,
+                benchmarks: cleanMetrics.benchmarks || {}
+            };
+            return Object.assign({}, defaults, cleanMetrics);
+        }
+
         // 显示详情模态框（内部函数）
         async function _showDetailModalInternal(item, isVerificationExperiment = false) {
             // 如果不是验证实验，保存为原始数据点
@@ -762,8 +849,16 @@
                 if (backBtn) backBtn.style.display = 'block';
             }
             
+            // 填充默认值
+            const enrichedItem = {
+                ...item,
+                measurementDetails: fillDefaultMeasurementDetails(item),
+                metrics: fillDefaultHealthMetrics(item),
+                bodyInfo: fillDefaultBodyInfo(item)
+            };
+            
             // 查找验证数据（只有非验证实验才查找，避免嵌套）
-            const verificationByLevel = isVerificationExperiment ? { A: [], B: [], C: [] } : findSimilarPoints(item);
+            const verificationByLevel = isVerificationExperiment ? { A: [], B: [], C: [] } : findSimilarPoints(enrichedItem);
             
             // 计算各级别的数量（完全基于实际数据，不使用随机数）
             const verification = {
@@ -775,7 +870,10 @@
                 total: verificationByLevel.A.length + verificationByLevel.B.length + verificationByLevel.C.length
             };
             
-            document.getElementById('modal-title').textContent = item.name;
+            // 使用 enrichedItem 替代 item
+            const displayItem = enrichedItem;
+            
+            document.getElementById('modal-title').textContent = displayItem.name;
             
             // 如果是验证实验，不显示分级验证部分
             const showVerificationSection = !isVerificationExperiment;
@@ -785,28 +883,79 @@
                 <div class="detail-section">
                     <div class="section-title">📄 基本信息</div>
                     <div class="section-content">
-                        <p><strong>日期:</strong> ${item.date}</p>
-                        <p><strong>分类:</strong> ${item.cluster}</p>
-                        <p><strong>领域:</strong> ${item.domain === 'health' ? '健康监测' : item.domain === 'fitness' ? '运动数据' : '其他'}</p>
-                        <p><strong>心率值:</strong> ${item.value} bpm</p>
+                        <p><strong>日期:</strong> ${displayItem.date}</p>
+                        <p><strong>分类:</strong> ${displayItem.cluster}</p>
+                        <p><strong>领域:</strong> ${displayItem.domain === 'health' ? '健康监测' : displayItem.domain === 'fitness' ? '运动数据' : displayItem.domain === 'sleep' ? '睡眠数据' : '其他'}</p>
+                        <p><strong>心率值:</strong> ${displayItem.value} bpm</p>
                     </div>
                 </div>
+
+                ${displayItem.bodyInfo && (displayItem.bodyInfo.gender || displayItem.bodyInfo.height || displayItem.bodyInfo.weight || displayItem.bodyInfo.bodyCondition) ? `
+                <div class="detail-section">
+                    <div class="section-title">👤 身体基本信息</div>
+                    <div class="section-content">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 10px;">
+                            ${displayItem.bodyInfo.gender ? `
+                                <div style="padding: 12px; background: linear-gradient(135deg, #fce7f3 0%, #ffffff 100%); border-radius: 6px; border-left: 3px solid #ec4899;">
+                                    <div style="font-weight: 600; color: #ec4899; margin-bottom: 6px; font-size: 13px;">👤 性别</div>
+                                    <div style="font-size: 18px; font-weight: 700; color: #ec4899;">${displayItem.bodyInfo.gender === 'male' || displayItem.bodyInfo.gender === '男' || displayItem.bodyInfo.gender === 'M' ? '男' : displayItem.bodyInfo.gender === 'female' || displayItem.bodyInfo.gender === '女' || displayItem.bodyInfo.gender === 'F' ? '女' : displayItem.bodyInfo.gender}</div>
+                                </div>
+                            ` : ''}
+                            ${displayItem.bodyInfo.height ? `
+                                <div style="padding: 12px; background: linear-gradient(135deg, #e0f2fe 0%, #ffffff 100%); border-radius: 6px; border-left: 3px solid #0284c7;">
+                                    <div style="font-weight: 600; color: #0284c7; margin-bottom: 6px; font-size: 13px;">📏 身高</div>
+                                    <div style="font-size: 20px; font-weight: 700; color: #0284c7;">${displayItem.bodyInfo.height}</div>
+                                    <div style="font-size: 12px; color: #57534e; margin-top: 4px;">cm</div>
+                                </div>
+                            ` : ''}
+                            ${displayItem.bodyInfo.weight ? `
+                                <div style="padding: 12px; background: linear-gradient(135deg, #fef3c7 0%, #ffffff 100%); border-radius: 6px; border-left: 3px solid #f59e0b;">
+                                    <div style="font-weight: 600; color: #f59e0b; margin-bottom: 6px; font-size: 13px;">⚖️ 体重</div>
+                                    <div style="font-size: 20px; font-weight: 700; color: #f59e0b;">${displayItem.bodyInfo.weight}</div>
+                                    <div style="font-size: 12px; color: #57534e; margin-top: 4px;">kg</div>
+                                </div>
+                            ` : ''}
+                            ${displayItem.bodyInfo.bmi ? `
+                                <div style="padding: 12px; background: linear-gradient(135deg, #dbeafe 0%, #ffffff 100%); border-radius: 6px; border-left: 3px solid #3b82f6;">
+                                    <div style="font-weight: 600; color: #3b82f6; margin-bottom: 6px; font-size: 13px;">📊 BMI</div>
+                                    <div style="font-size: 20px; font-weight: 700; color: #3b82f6;">${displayItem.bodyInfo.bmi}</div>
+                                    <div style="font-size: 12px; color: #57534e; margin-top: 4px;">${displayItem.bodyInfo.bmi < 18.5 ? '偏瘦' : displayItem.bodyInfo.bmi < 24 ? '正常' : displayItem.bodyInfo.bmi < 28 ? '偏胖' : '肥胖'}</div>
+                                </div>
+                            ` : ''}
+                        </div>
+                        ${displayItem.bodyInfo.bodyCondition || displayItem.bodyInfo.fitnessGoal ? `
+                            <div style="margin-top: 15px; padding: 12px; background: #f0fdf4; border-radius: 6px; border-left: 3px solid #22c55e;">
+                                <div style="font-weight: 600; color: #22c55e; margin-bottom: 8px;">🎯 身体情况 / 健康目标</div>
+                                <div style="font-size: 14px; color: #57606a; line-height: 1.8;">
+                                    ${displayItem.bodyInfo.bodyCondition ? `<strong>身体情况:</strong> ${displayItem.bodyInfo.bodyCondition}<br>` : ''}
+                                    ${displayItem.bodyInfo.fitnessGoal ? `<strong>健身目标:</strong> ${displayItem.bodyInfo.fitnessGoal}<br>` : ''}
+                                    ${displayItem.bodyInfo.exerciseType ? `<strong>运动类型:</strong> ${displayItem.bodyInfo.exerciseType}<br>` : ''}
+                                    ${displayItem.bodyInfo.dietPlan ? `<strong>饮食计划:</strong> ${displayItem.bodyInfo.dietPlan}<br>` : ''}
+                                    ${displayItem.bodyInfo.healthStatus ? `<strong>健康状况:</strong> ${displayItem.bodyInfo.healthStatus}` : ''}
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+                ` : ''}
 
                 <div class="detail-section">
                     <div class="section-title">📌 核心条件</div>
                     <div class="section-content">
-                        <p>${item.conditions}</p>
+                        <p>${displayItem.conditions || '未说明'}</p>
                     </div>
                 </div>
 
                 <div class="detail-section">
-                    <div class="section-title">📊 实验效果</div>
+                    <div class="section-title">📊 测量结果</div>
                     <div class="section-content">
-                        <p>${item.result}</p>
+                        <p>${displayItem.result || '未说明'}</p>
                     </div>
                 </div>
 
-                ${item.experimentDetails || item.measurementDetails ? `
+                <div class="detail-section">
+                    <div class="section-title">⚙️ 详细测量条件</div>
+                    <div class="section-content">
                 <div class="detail-section">
                     <div class="section-title">⚙️ 详细测量条件</div>
                     <div class="section-content">
@@ -814,115 +963,116 @@
                             <div style="padding: 12px; background: #f6f8fa; border-radius: 6px; border-left: 3px solid #0969da;">
                                 <div style="font-weight: 600; color: #0969da; margin-bottom: 6px;">📱 测量设备</div>
                                 <div style="font-size: 13px; color: #57606a;">
-                                    ${item.source || item.experimentDetails?.device || item.measurementDetails?.device || '未说明'}
-                                    ${item.experimentDetails?.deviceModel || item.measurementDetails?.deviceModel ? `<br>设备型号: ${item.experimentDetails.deviceModel || item.measurementDetails.deviceModel}` : ''}
-                                    ${item.experimentDetails?.sensorType || item.measurementDetails?.sensorType ? `<br>传感器类型: ${item.experimentDetails.sensorType || item.measurementDetails.sensorType}` : ''}
-                                    ${item.experimentDetails?.samplingRate || item.measurementDetails?.samplingRate ? `<br>采样频率: ${item.experimentDetails.samplingRate || item.measurementDetails.samplingRate}` : ''}
+                                    ${displayItem.measurementDetails.device}
+                                    ${displayItem.measurementDetails.deviceModel && displayItem.measurementDetails.deviceModel !== '未说明' ? `<br>设备型号: ${displayItem.measurementDetails.deviceModel}` : ''}
+                                    ${displayItem.measurementDetails.sensorType && displayItem.measurementDetails.sensorType !== '未说明' ? `<br>传感器类型: ${displayItem.measurementDetails.sensorType}` : ''}
+                                    ${displayItem.measurementDetails.samplingRate && displayItem.measurementDetails.samplingRate !== '未说明' ? `<br>采样频率: ${displayItem.measurementDetails.samplingRate}` : ''}
                                 </div>
                             </div>
                             <div style="padding: 12px; background: #f6f8fa; border-radius: 6px; border-left: 3px solid #1a7f37;">
                                 <div style="font-weight: 600; color: #1a7f37; margin-bottom: 6px;">⏰ 测量时间</div>
                                 <div style="font-size: 13px; color: #57606a;">
-                                    ${item.date || '未说明'}
-                                    ${item.experimentDetails?.measurementTime || item.measurementDetails?.measurementTime ? `<br>具体时间: ${item.experimentDetails.measurementTime || item.measurementDetails.measurementTime}` : ''}
-                                    ${item.experimentDetails?.duration || item.measurementDetails?.duration ? `<br>测量时长: ${item.experimentDetails.duration || item.measurementDetails.duration}` : ''}
-                                    ${item.experimentDetails?.timeOfDay || item.measurementDetails?.timeOfDay ? `<br>时段: ${item.experimentDetails.timeOfDay || item.measurementDetails.timeOfDay}` : ''}
+                                    ${displayItem.date || '未说明'}
+                                    ${displayItem.measurementDetails.measurementTime && displayItem.measurementDetails.measurementTime !== '未说明' ? `<br>具体时间: ${displayItem.measurementDetails.measurementTime}` : ''}
+                                    ${displayItem.measurementDetails.duration && displayItem.measurementDetails.duration !== '未说明' ? `<br>测量时长: ${displayItem.measurementDetails.duration}` : ''}
+                                    ${displayItem.measurementDetails.timeOfDay && displayItem.measurementDetails.timeOfDay !== '未说明' ? `<br>时段: ${displayItem.measurementDetails.timeOfDay}` : ''}
                                 </div>
                             </div>
                             <div style="padding: 12px; background: #f6f8fa; border-radius: 6px; border-left: 3px solid #cf222e;">
                                 <div style="font-weight: 600; color: #cf222e; margin-bottom: 6px;">🌡️ 测量环境</div>
                                 <div style="font-size: 13px; color: #57606a;">
-                                    ${item.experimentDetails?.environment || item.measurementDetails?.environment || item.conditions || '未说明'}
-                                    ${item.experimentDetails?.temperature || item.measurementDetails?.temperature ? `<br>环境温度: ${item.experimentDetails.temperature || item.measurementDetails.temperature}°C` : ''}
-                                    ${item.experimentDetails?.humidity || item.measurementDetails?.humidity ? `<br>湿度: ${item.experimentDetails.humidity || item.measurementDetails.humidity}%` : ''}
-                                    ${item.experimentDetails?.location || item.measurementDetails?.location ? `<br>位置: ${item.experimentDetails.location || item.measurementDetails.location}` : ''}
+                                    ${displayItem.measurementDetails.environment}
+                                    ${displayItem.measurementDetails.temperature ? `<br>环境温度: ${displayItem.measurementDetails.temperature}°C` : ''}
+                                    ${displayItem.measurementDetails.humidity ? `<br>湿度: ${displayItem.measurementDetails.humidity}%` : ''}
+                                    ${displayItem.measurementDetails.location ? `<br>位置: ${displayItem.measurementDetails.location}` : ''}
                                 </div>
                             </div>
                             <div style="padding: 12px; background: #f6f8fa; border-radius: 6px; border-left: 3px solid #8250df;">
                                 <div style="font-weight: 600; color: #8250df; margin-bottom: 6px;">💪 身体状态</div>
                                 <div style="font-size: 13px; color: #57606a;">
-                                    ${item.conditions || item.experimentDetails?.bodyState || item.measurementDetails?.bodyState || '未说明'}
-                                    ${item.experimentDetails?.activityType || item.measurementDetails?.activityType ? `<br>活动类型: ${item.experimentDetails.activityType || item.measurementDetails.activityType}` : ''}
-                                    ${item.experimentDetails?.sleepStage || item.measurementDetails?.sleepStage ? `<br>睡眠阶段: ${item.experimentDetails.sleepStage || item.measurementDetails.sleepStage}` : ''}
-                                    ${item.experimentDetails?.stressLevel || item.measurementDetails?.stressLevel ? `<br>压力水平: ${item.experimentDetails.stressLevel || item.measurementDetails.stressLevel}` : ''}
+                                    ${displayItem.measurementDetails.bodyState}
+                                    ${displayItem.measurementDetails.activityType ? `<br>活动类型: ${displayItem.measurementDetails.activityType}` : ''}
+                                    ${displayItem.measurementDetails.sleepStage ? `<br>睡眠阶段: ${displayItem.measurementDetails.sleepStage}` : ''}
+                                    ${displayItem.measurementDetails.stressLevel ? `<br>压力水平: ${displayItem.measurementDetails.stressLevel}` : ''}
                                 </div>
                             </div>
                         </div>
-                        ${item.experimentDetails?.notes || item.measurementDetails?.notes ? `
+                        ${displayItem.measurementDetails.notes ? `
                             <div style="margin-top: 15px; padding: 12px; background: #fff8e1; border-radius: 6px; border-left: 3px solid #f59e0b;">
                                 <div style="font-weight: 600; color: #f59e0b; margin-bottom: 6px;">📝 备注信息</div>
-                                <div style="font-size: 13px; color: #57606a;">${item.experimentDetails.notes || item.measurementDetails.notes}</div>
+                                <div style="font-size: 13px; color: #57606a;">${displayItem.measurementDetails.notes}</div>
                             </div>
                         ` : ''}
                     </div>
                 </div>
-                ` : ''}
 
-                ${item.metrics || item.healthMetrics ? `
+                <div class="detail-section">
+                    <div class="section-title">📈 详细健康指标</div>
+                    <div class="section-content">
                 <div class="detail-section">
                     <div class="section-title">📈 详细健康指标</div>
                     <div class="section-content">
                         <div style="margin-top: 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
                             <div style="padding: 12px; background: linear-gradient(135deg, #fee2e2 0%, #ffffff 100%); border-radius: 6px; border: 1px solid #fca5a5;">
                                 <div style="font-weight: 600; color: #dc2626; margin-bottom: 6px; font-size: 13px;">❤️ 心率值</div>
-                                <div style="font-size: 24px; font-weight: 700; color: #dc2626;">${item.value || item.metrics?.heartRate || item.healthMetrics?.heartRate || 'N/A'}</div>
+                                <div style="font-size: 24px; font-weight: 700; color: #dc2626;">${displayItem.metrics.heartRate || displayItem.value || 'N/A'}</div>
                                 <div style="font-size: 12px; color: #57534e; margin-top: 4px;">bpm (次/分钟)</div>
                             </div>
-                            ${item.metrics?.heartRateZone || item.healthMetrics?.heartRateZone ? `
+                            ${displayItem.metrics.heartRateZone ? `
                                 <div style="padding: 12px; background: #f6f8fa; border-radius: 6px;">
                                     <div style="font-weight: 600; color: #1a7f37; margin-bottom: 6px; font-size: 13px;">🎯 心率区间</div>
-                                    <div style="font-size: 16px; font-weight: 600; color: #1a7f37;">${item.metrics.heartRateZone || item.healthMetrics.heartRateZone}</div>
-                                    ${item.metrics.zonePercentage || item.healthMetrics.zonePercentage ? `<div style="font-size: 12px; color: #57534e; margin-top: 4px;">占比: ${item.metrics.zonePercentage || item.healthMetrics.zonePercentage}%</div>` : ''}
+                                    <div style="font-size: 16px; font-weight: 600; color: #1a7f37;">${displayItem.metrics.heartRateZone}</div>
+                                    ${displayItem.metrics.zonePercentage ? `<div style="font-size: 12px; color: #57534e; margin-top: 4px;">占比: ${displayItem.metrics.zonePercentage}%</div>` : ''}
                                 </div>
                             ` : ''}
-                            ${item.metrics?.exerciseIntensity || item.healthMetrics?.exerciseIntensity ? `
+                            ${displayItem.metrics.exerciseIntensity ? `
                                 <div style="padding: 12px; background: #f6f8fa; border-radius: 6px;">
                                     <div style="font-weight: 600; color: #cf222e; margin-bottom: 6px; font-size: 13px;">💪 运动强度</div>
-                                    <div style="font-size: 16px; font-weight: 600; color: #cf222e;">${item.metrics.exerciseIntensity || item.healthMetrics.exerciseIntensity}</div>
+                                    <div style="font-size: 16px; font-weight: 600; color: #cf222e;">${displayItem.metrics.exerciseIntensity}</div>
                                 </div>
                             ` : ''}
-                            ${item.metrics?.recoveryTime || item.healthMetrics?.recoveryTime ? `
+                            ${displayItem.metrics.recoveryTime ? `
                                 <div style="padding: 12px; background: #f6f8fa; border-radius: 6px;">
                                     <div style="font-weight: 600; color: #8250df; margin-bottom: 6px; font-size: 13px;">⏱️ 恢复时间</div>
-                                    <div style="font-size: 16px; font-weight: 600; color: #8250df;">${item.metrics.recoveryTime || item.healthMetrics.recoveryTime}</div>
+                                    <div style="font-size: 16px; font-weight: 600; color: #8250df;">${displayItem.metrics.recoveryTime}</div>
                                 </div>
                             ` : ''}
-                            ${item.metrics?.hrv || item.healthMetrics?.hrv ? `
+                            ${displayItem.metrics.hrv ? `
                                 <div style="padding: 12px; background: #f6f8fa; border-radius: 6px;">
                                     <div style="font-weight: 600; color: #0969da; margin-bottom: 6px; font-size: 13px;">📊 心率变异性</div>
-                                    <div style="font-size: 16px; font-weight: 600; color: #0969da;">${item.metrics.hrv || item.healthMetrics.hrv} ms</div>
+                                    <div style="font-size: 16px; font-weight: 600; color: #0969da;">${displayItem.metrics.hrv} ms</div>
                                 </div>
                             ` : ''}
-                            ${item.metrics?.healthAssessment || item.healthMetrics?.healthAssessment ? `
+                            ${displayItem.metrics.healthAssessment ? `
                                 <div style="padding: 12px; background: #f6f8fa; border-radius: 6px;">
                                     <div style="font-weight: 600; color: #1a7f37; margin-bottom: 6px; font-size: 13px;">✅ 健康评估</div>
-                                    <div style="font-size: 14px; color: #57606a;">${item.metrics.healthAssessment || item.healthMetrics.healthAssessment}</div>
+                                    <div style="font-size: 14px; color: #57606a;">${displayItem.metrics.healthAssessment}</div>
                                 </div>
                             ` : ''}
                         </div>
-                        ${item.metrics?.caloriesBurned || item.healthMetrics?.caloriesBurned ? `
+                        ${displayItem.metrics.caloriesBurned ? `
                             <div style="margin-top: 15px; padding: 12px; background: #fff8e1; border-radius: 6px; border-left: 3px solid #f59e0b;">
                                 <div style="font-weight: 600; color: #f59e0b; margin-bottom: 8px;">🔥 卡路里消耗</div>
-                                <div style="font-size: 16px; font-weight: 600; color: #f59e0b;">${item.metrics.caloriesBurned || item.healthMetrics.caloriesBurned} 千卡</div>
+                                <div style="font-size: 16px; font-weight: 600; color: #f59e0b;">${displayItem.metrics.caloriesBurned} 千卡</div>
                             </div>
                         ` : ''}
-                        ${item.metrics?.additionalHealthMetrics || item.healthMetrics?.additionalMetrics ? `
+                        ${displayItem.metrics.additionalHealthMetrics ? `
                             <div style="margin-top: 15px; padding: 12px; background: #f0f9ff; border-radius: 6px; border-left: 3px solid #0284c7;">
                                 <div style="font-weight: 600; color: #0284c7; margin-bottom: 8px;">📋 其他健康指标</div>
                                 <div style="font-size: 13px; color: #57606a; line-height: 1.8;">
-                                    ${typeof (item.metrics?.additionalHealthMetrics || item.healthMetrics?.additionalMetrics) === 'object' 
-                                        ? Object.entries(item.metrics?.additionalHealthMetrics || item.healthMetrics?.additionalMetrics).map(([key, value]) => 
+                                    ${typeof displayItem.metrics.additionalHealthMetrics === 'object' 
+                                        ? Object.entries(displayItem.metrics.additionalHealthMetrics).map(([key, value]) => 
                                             `<strong>${key}:</strong> ${typeof value === 'object' ? JSON.stringify(value) : value}<br>`
                                         ).join('')
-                                        : (item.metrics?.additionalHealthMetrics || item.healthMetrics?.additionalMetrics)}
+                                        : displayItem.metrics.additionalHealthMetrics}
                                 </div>
                             </div>
                         ` : ''}
-                        ${item.metrics?.benchmarks ? `
+                        ${Object.keys(displayItem.metrics.benchmarks || {}).length > 0 ? `
                             <div style="margin-top: 15px;">
                                 <div style="font-weight: 600; margin-bottom: 12px; color: #24292f;">健康评估基准:</div>
                                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
-                                    ${Object.entries(item.metrics.benchmarks).map(([benchmark, value]) => `
+                                    ${Object.entries(displayItem.metrics.benchmarks).map(([benchmark, value]) => `
                                         <div style="padding: 12px; background: linear-gradient(135deg, #f6f8fa 0%, #ffffff 100%); border-radius: 6px; border: 1px solid #d0d7de;">
                                             <div style="font-weight: 600; color: #0969da; margin-bottom: 6px; font-size: 14px;">${benchmark}</div>
                                             <div style="font-size: 18px; font-weight: 700; color: #24292f;">${typeof value === 'object' ? JSON.stringify(value, null, 2) : value}</div>
@@ -933,7 +1083,6 @@
                         ` : ''}
                     </div>
                 </div>
-                ` : ''}
 
                 <div class="detail-section">
                     <div class="section-title">💬 评论区</div>
@@ -1008,42 +1157,33 @@
                 <div class="detail-section">
                     <div class="section-title">🔗 原始内容链接</div>
                     <div class="section-content">
-                        <a href="${item.sourceUrl || item.paperUrl || `https://arxiv.org/search/?query=${encodeURIComponent(item.source || item.paper || '')}`}" target="_blank" class="link-item">
-                            📄 数据来源: ${item.source || item.paper || '未知'}
+                        <a href="${displayItem.sourceUrl || displayItem.paperUrl || `#`}" target="_blank" class="link-item">
+                            📄 数据来源: ${displayItem.source || displayItem.paper || '未知'}
                         </a>
                         <br><br>
-                        ${item.codeUrl ? `
-                            <a href="${item.codeUrl}" target="_blank" class="link-item">
-                                💻 验证实验代码: ${item.codeUrl}
+                        ${displayItem.codeUrl ? `
+                            <a href="${displayItem.codeUrl}" target="_blank" class="link-item">
+                                💻 验证实验代码: ${displayItem.codeUrl}
                             </a>
                             <br><br>
                         ` : ''}
-                        ${item.githubUrl ? `
-                            <a href="${item.githubUrl}" target="_blank" class="link-item">
-                                💻 GitHub 代码库: ${item.githubUrl}
+                        ${displayItem.githubUrl ? `
+                            <a href="${displayItem.githubUrl}" target="_blank" class="link-item">
+                                💻 GitHub 代码库: ${displayItem.githubUrl}
                             </a>
                             <br><br>
-                        ` : `
-                            <a href="https://github.com/search?q=${encodeURIComponent(item.name)}" target="_blank" class="link-item">
-                                💻 GitHub 代码库
+                        ` : ''}
+                        ${displayItem.huggingfaceUrl ? `
+                            <a href="${displayItem.huggingfaceUrl}" target="_blank" class="link-item">
+                                🤗 HuggingFace 模型: ${displayItem.huggingfaceUrl}
                             </a>
-                            <br><br>
-                        `}
-                        ${item.huggingfaceUrl ? `
-                            <a href="${item.huggingfaceUrl}" target="_blank" class="link-item">
-                                🤗 HuggingFace 模型: ${item.huggingfaceUrl}
-                            </a>
-                        ` : `
-                            <a href="https://huggingface.co/search?q=${encodeURIComponent(item.name)}" target="_blank" class="link-item">
-                                🤗 HuggingFace 模型
-                            </a>
-                        `}
+                        ` : ''}
                     </div>
                 </div>
             `;
             
             // 渲染每个级别的验证实验列表
-            renderVerificationLevels(verificationByLevel, item);
+            renderVerificationLevels(verificationByLevel, displayItem);
             
             // 绑定验证等级点击事件（展开/收起）
             document.querySelectorAll('.verification-badge').forEach(badge => {
@@ -1097,13 +1237,20 @@
                                     复现结果: ${point.result || '待验证'}
                                 </div>
                                 ${point.codeUrl ? `<div style="font-size: 11px; color: #0969da; margin-top: 2px;">🔗 代码: ${point.codeUrl}</div>` : ''}
-                                ${point.experimentDetails ? `
-                                    <div style="font-size: 11px; color: #57606a; margin-top: 4px;">
-                                        📋 超参数: ${point.experimentDetails.hyperparameters} | 
-                                        训练日志: ${point.experimentDetails.trainingLog} | 
-                                        硬件: ${point.experimentDetails.hardware || '未说明'}
-                                    </div>
-                                ` : ''}
+                                ${point.experimentDetails || point.measurementDetails ? (() => {
+                                    const details = point.experimentDetails || point.measurementDetails;
+                                    const info = [];
+                                    if (details.hyperparameters && details.hyperparameters !== 'undefined') {
+                                        info.push(`📋 超参数: ${details.hyperparameters}`);
+                                    }
+                                    if (details.trainingLog && details.trainingLog !== 'undefined') {
+                                        info.push(`训练日志: ${details.trainingLog}`);
+                                    }
+                                    if (details.device || details.hardware) {
+                                        info.push(`设备: ${details.device || details.hardware || '未说明'}`);
+                                    }
+                                    return info.length > 0 ? `<div style="font-size: 11px; color: #57606a; margin-top: 4px;">${info.join(' | ')}</div>` : '';
+                                })() : ''}
                             </div>
                         `).join('')}
                     `;

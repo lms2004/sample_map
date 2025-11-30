@@ -9,7 +9,37 @@
     "conditions": "运动后30分钟",
     "result": "静息心率正常，运动恢复良好",
     "source": "手环记录",
-    "sourceUrl": ""
+    "sourceUrl": "",
+    "bodyInfo": {
+      "gender": "男",
+      "height": 175,
+      "weight": 72,
+      "bmi": 23.5,
+      "bodyCondition": "减肥中",
+      "fitnessGoal": "减脂塑形",
+      "exerciseType": "有氧运动 + 力量训练",
+      "dietPlan": "低卡饮食，控制碳水",
+      "healthStatus": "良好"
+    },
+    "measurementDetails": {
+      "device": "小米手环8",
+      "deviceModel": "Xiaomi Band 8",
+      "sensorType": "PPG光学心率传感器",
+      "samplingRate": "1次/秒",
+      "measurementTime": "14:30",
+      "duration": "连续测量5分钟",
+      "timeOfDay": "下午",
+      "environment": "室内，温度22°C",
+      "bodyState": "运动后恢复期"
+    },
+    "metrics": {
+      "heartRate": 72,
+      "heartRateZone": "静息区间",
+      "zonePercentage": 85,
+      "exerciseIntensity": "低强度",
+      "recoveryTime": "30分钟",
+      "healthAssessment": "心率恢复良好，运动效果佳"
+    }
   },
   {
     "id": "heartrate_2024_01_16",
@@ -21,7 +51,34 @@
     "conditions": "晨起测量",
     "result": "静息心率正常，睡眠质量良好",
     "source": "手环记录",
-    "sourceUrl": ""
+    "sourceUrl": "",
+    "bodyInfo": {
+      "height": 175,
+      "weight": 71.5,
+      "bmi": 23.3,
+      "bodyCondition": "减肥中",
+      "fitnessGoal": "减脂塑形",
+      "exerciseType": "有氧运动 + 力量训练",
+      "dietPlan": "低卡饮食，控制碳水",
+      "healthStatus": "良好"
+    },
+    "measurementDetails": {
+      "device": "小米手环8",
+      "deviceModel": "Xiaomi Band 8",
+      "sensorType": "PPG光学心率传感器",
+      "samplingRate": "1次/秒",
+      "measurementTime": "07:00",
+      "duration": "连续测量3分钟",
+      "timeOfDay": "早晨",
+      "environment": "室内，温度20°C",
+      "bodyState": "晨起静息状态"
+    },
+    "metrics": {
+      "heartRate": 68,
+      "heartRateZone": "静息区间",
+      "zonePercentage": 90,
+      "healthAssessment": "静息心率正常，睡眠质量优秀"
+    }
   },
   {
     "id": "heartrate_2024_01_17",
@@ -33,7 +90,35 @@
     "conditions": "运动后1小时",
     "result": "心率略高，可能因运动强度较大",
     "source": "手环记录",
-    "sourceUrl": ""
+    "sourceUrl": "",
+    "bodyInfo": {
+      "height": 175,
+      "weight": 71.8,
+      "bmi": 23.4,
+      "bodyCondition": "减肥中",
+      "fitnessGoal": "减脂塑形",
+      "exerciseType": "高强度间歇训练",
+      "dietPlan": "低卡饮食，控制碳水",
+      "healthStatus": "良好"
+    },
+    "measurementDetails": {
+      "device": "小米手环8",
+      "deviceModel": "Xiaomi Band 8",
+      "sensorType": "PPG光学心率传感器",
+      "samplingRate": "1次/秒",
+      "measurementTime": "20:00",
+      "duration": "连续测量5分钟",
+      "timeOfDay": "晚上",
+      "environment": "室内，温度23°C",
+      "bodyState": "运动后恢复期"
+    },
+    "metrics": {
+      "heartRate": 75,
+      "heartRateZone": "静息区间",
+      "zonePercentage": 80,
+      "recoveryTime": "60分钟",
+      "healthAssessment": "心率恢复中，运动强度较大"
+    }
   },
   {
     "id": "heartrate_2024_01_18",
@@ -45,7 +130,34 @@
     "conditions": "午休后测量",
     "result": "静息心率正常",
     "source": "手环记录",
-    "sourceUrl": ""
+    "sourceUrl": "",
+    "bodyInfo": {
+      "height": 175,
+      "weight": 71.5,
+      "bmi": 23.3,
+      "bodyCondition": "减肥中",
+      "fitnessGoal": "减脂塑形",
+      "exerciseType": "有氧运动",
+      "dietPlan": "低卡饮食",
+      "healthStatus": "良好"
+    },
+    "measurementDetails": {
+      "device": "小米手环8",
+      "deviceModel": "Xiaomi Band 8",
+      "sensorType": "PPG光学心率传感器",
+      "samplingRate": "1次/秒",
+      "measurementTime": "14:00",
+      "duration": "连续测量3分钟",
+      "timeOfDay": "下午",
+      "environment": "室内，温度22°C",
+      "bodyState": "午休后"
+    },
+    "metrics": {
+      "heartRate": 70,
+      "heartRateZone": "静息区间",
+      "zonePercentage": 88,
+      "healthAssessment": "静息心率正常"
+    }
   },
   {
     "id": "heartrate_2024_01_19",
@@ -57,7 +169,37 @@
     "conditions": "慢跑中",
     "result": "有氧运动心率区间，运动强度适中",
     "source": "手环记录",
-    "sourceUrl": ""
+    "sourceUrl": "",
+    "bodyInfo": {
+      "height": 175,
+      "weight": 71.2,
+      "bmi": 23.2,
+      "bodyCondition": "减肥中",
+      "fitnessGoal": "减脂塑形",
+      "exerciseType": "慢跑",
+      "dietPlan": "低卡饮食，控制碳水",
+      "healthStatus": "良好"
+    },
+    "measurementDetails": {
+      "device": "小米手环8",
+      "deviceModel": "Xiaomi Band 8",
+      "sensorType": "PPG光学心率传感器",
+      "samplingRate": "1次/秒",
+      "measurementTime": "18:30",
+      "duration": "连续测量30分钟",
+      "timeOfDay": "傍晚",
+      "environment": "户外，温度18°C",
+      "bodyState": "慢跑中",
+      "activityType": "有氧运动"
+    },
+    "metrics": {
+      "heartRate": 85,
+      "heartRateZone": "有氧区间",
+      "zonePercentage": 65,
+      "exerciseIntensity": "中等强度",
+      "caloriesBurned": 280,
+      "healthAssessment": "有氧运动效果良好，燃脂效率高"
+    }
   },
   {
     "id": "heartrate_2024_01_20",
@@ -69,7 +211,37 @@
     "conditions": "快跑中",
     "result": "高强度运动心率，达到燃脂区间",
     "source": "手环记录",
-    "sourceUrl": ""
+    "sourceUrl": "",
+    "bodyInfo": {
+      "height": 175,
+      "weight": 71.0,
+      "bmi": 23.2,
+      "bodyCondition": "减肥中",
+      "fitnessGoal": "减脂塑形",
+      "exerciseType": "快跑",
+      "dietPlan": "低卡饮食，控制碳水",
+      "healthStatus": "良好"
+    },
+    "measurementDetails": {
+      "device": "小米手环8",
+      "deviceModel": "Xiaomi Band 8",
+      "sensorType": "PPG光学心率传感器",
+      "samplingRate": "1次/秒",
+      "measurementTime": "19:00",
+      "duration": "连续测量25分钟",
+      "timeOfDay": "晚上",
+      "environment": "户外，温度17°C",
+      "bodyState": "快跑中",
+      "activityType": "高强度有氧运动"
+    },
+    "metrics": {
+      "heartRate": 95,
+      "heartRateZone": "燃脂区间",
+      "zonePercentage": 75,
+      "exerciseIntensity": "高强度",
+      "caloriesBurned": 350,
+      "healthAssessment": "高强度运动，燃脂效果显著"
+    }
   },
   {
     "id": "heartrate_2024_01_21",
@@ -81,7 +253,35 @@
     "conditions": "深度睡眠",
     "result": "睡眠心率正常，恢复良好",
     "source": "手环记录",
-    "sourceUrl": ""
+    "sourceUrl": "",
+    "bodyInfo": {
+      "height": 175,
+      "weight": 70.8,
+      "bmi": 23.1,
+      "bodyCondition": "减肥中",
+      "fitnessGoal": "减脂塑形",
+      "exerciseType": "有氧运动 + 力量训练",
+      "dietPlan": "低卡饮食",
+      "healthStatus": "良好"
+    },
+    "measurementDetails": {
+      "device": "小米手环8",
+      "deviceModel": "Xiaomi Band 8",
+      "sensorType": "PPG光学心率传感器",
+      "samplingRate": "1次/分钟",
+      "measurementTime": "03:00",
+      "duration": "整夜监测",
+      "timeOfDay": "夜间",
+      "environment": "室内，温度20°C",
+      "bodyState": "深度睡眠",
+      "sleepStage": "深度睡眠期"
+    },
+    "metrics": {
+      "heartRate": 65,
+      "heartRateZone": "静息区间",
+      "zonePercentage": 95,
+      "healthAssessment": "睡眠质量优秀，心率恢复良好"
+    }
   },
   {
     "id": "heartrate_2024_01_22",
@@ -93,7 +293,35 @@
     "conditions": "工作压力较大",
     "result": "心率略高，可能与压力相关",
     "source": "手环记录",
-    "sourceUrl": ""
+    "sourceUrl": "",
+    "bodyInfo": {
+      "height": 175,
+      "weight": 70.9,
+      "bmi": 23.1,
+      "bodyCondition": "减肥中",
+      "fitnessGoal": "减脂塑形",
+      "exerciseType": "有氧运动",
+      "dietPlan": "低卡饮食",
+      "healthStatus": "良好，但压力较大"
+    },
+    "measurementDetails": {
+      "device": "小米手环8",
+      "deviceModel": "Xiaomi Band 8",
+      "sensorType": "PPG光学心率传感器",
+      "samplingRate": "1次/秒",
+      "measurementTime": "15:30",
+      "duration": "连续测量5分钟",
+      "timeOfDay": "下午",
+      "environment": "办公室，温度24°C",
+      "bodyState": "工作状态",
+      "stressLevel": "较高"
+    },
+    "metrics": {
+      "heartRate": 78,
+      "heartRateZone": "静息区间",
+      "zonePercentage": 82,
+      "healthAssessment": "心率略高，可能与工作压力相关，建议适当休息"
+    }
   },
   {
     "id": "heartrate_2024_01_23",
@@ -105,7 +333,37 @@
     "conditions": "游泳中",
     "result": "有氧运动心率，游泳强度适中",
     "source": "手环记录",
-    "sourceUrl": ""
+    "sourceUrl": "",
+    "bodyInfo": {
+      "height": 175,
+      "weight": 70.5,
+      "bmi": 23.0,
+      "bodyCondition": "减肥中",
+      "fitnessGoal": "减脂塑形",
+      "exerciseType": "游泳",
+      "dietPlan": "低卡饮食，控制碳水",
+      "healthStatus": "良好"
+    },
+    "measurementDetails": {
+      "device": "小米手环8",
+      "deviceModel": "Xiaomi Band 8",
+      "sensorType": "PPG光学心率传感器",
+      "samplingRate": "1次/秒",
+      "measurementTime": "19:30",
+      "duration": "连续测量40分钟",
+      "timeOfDay": "晚上",
+      "environment": "游泳池，温度28°C",
+      "bodyState": "游泳中",
+      "activityType": "有氧运动"
+    },
+    "metrics": {
+      "heartRate": 88,
+      "heartRateZone": "有氧区间",
+      "zonePercentage": 70,
+      "exerciseIntensity": "中等强度",
+      "caloriesBurned": 320,
+      "healthAssessment": "游泳运动效果良好，全身协调性训练"
+    }
   },
   {
     "id": "heartrate_2024_01_24",
@@ -117,7 +375,35 @@
     "conditions": "运动后30分钟",
     "result": "静息心率正常，运动恢复良好",
     "source": "手环记录",
-    "sourceUrl": ""
+    "sourceUrl": "",
+    "bodyInfo": {
+      "height": 175,
+      "weight": 70.3,
+      "bmi": 23.0,
+      "bodyCondition": "减肥中",
+      "fitnessGoal": "减脂塑形",
+      "exerciseType": "有氧运动 + 力量训练",
+      "dietPlan": "低卡饮食，控制碳水",
+      "healthStatus": "良好"
+    },
+    "measurementDetails": {
+      "device": "小米手环8",
+      "deviceModel": "Xiaomi Band 8",
+      "sensorType": "PPG光学心率传感器",
+      "samplingRate": "1次/秒",
+      "measurementTime": "20:00",
+      "duration": "连续测量5分钟",
+      "timeOfDay": "晚上",
+      "environment": "室内，温度22°C",
+      "bodyState": "运动后恢复期"
+    },
+    "metrics": {
+      "heartRate": 72,
+      "heartRateZone": "静息区间",
+      "zonePercentage": 85,
+      "recoveryTime": "30分钟",
+      "healthAssessment": "心率恢复良好，运动效果佳"
+    }
   }
 ]
 

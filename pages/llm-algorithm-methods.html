@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大模型算法方法地图</title>
+    <style>
+        :root {
+            --bg-color: #f4f6f9;
+            --text-main: #2c3e50;
+            --text-light: #7f8c8d;
+            --col-eng: #2980b9;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: var(--text-main);
+        }
+
+        .breadcrumb {
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        .breadcrumb a {
+            color: var(--col-eng);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px 0;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        p.subtitle {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+
+        .domain-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .map-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            cursor: pointer;
+            opacity: 0;
+            animation: fadeIn 0.5s forwards;
+            border-top: 5px solid var(--col-eng);
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .subject-code {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--col-eng);
+            opacity: 0.6;
+        }
+
+        .subject-icon {
+            font-size: 1.5rem;
+        }
+
+        .card-body {
+            padding: 0 20px 20px 20px;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            margin: 0 0 10px 0;
+            font-weight: 700;
+        }
+
+        .card-desc {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag {
+            font-size: 0.8rem;
+            padding: 4px 10px;
+            border-radius: 6px;
+            background-color: #f0f2f5;
+            color: #555;
+            transition: background 0.2s;
+        }
+        
+        .card:hover .tag {
+            background-color: rgba(0,0,0,0.05);
+        }
+
+        .card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(0.8);
+            pointer-events: none;
+        }
+
+        .card.disabled:hover {
+            transform: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .back-home {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background: white;
+            border-radius: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 600;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .back-home:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        @media (max-width: 768px) {
+            .map-grid {
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+                gap: 20px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 15px;
+            }
+            .map-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            h1 { 
+                font-size: 1.8rem;
+                letter-spacing: 1px;
+            }
+            p.subtitle {
+                font-size: 1rem;
+            }
+            .back-home {
+                top: 10px;
+                left: 10px;
+                padding: 8px 16px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<a href="../home.html" class="back-home">🏠 首页</a>
+
+    <div class="breadcrumb">
+        <a href="../home.html">首页</a>
+        <span> / </span>
+        <a href="engineering.html">工科</a>
+        <span> / </span>
+        <a href="computer.html">计算机</a>
+        <span> / </span>
+        <a href="llm-algorithm.html">大模型算法</a>
+        <span> / </span>
+        <span class="current" id="current-domain">方法</span>
+    </div>
+
+<header>
+    <h1>🔬 大模型算法方法地图</h1>
+    <p class="subtitle">选择具体的技术方法</p>
+    <div class="domain-badge" id="domain-badge"></div>
+</header>
+
+<div class="map-grid" id="grid">
+    <!-- 卡片将通过 JS 动态生成 -->
+</div>
+
+    <script>
+    // 获取URL参数中的domain
+    const urlParams = new URLSearchParams(window.location.search);
+    const domain = urlParams.get('domain') || 'general';
+
+    // 领域到方法的映射
+    const domainMethods = {
+        'code': {
+            name: '代码领域',
+            icon: '💻',
+            methods: [
+                {
+                    code: "ALIGN", name: "后训练对齐", icon: "🎯",
+                    desc: "研究大模型在代码领域的后训练对齐技术，包括RLHF、DPO等方法。",
+                    sub: ["RLHF", "DPO", "RLAIF", "过程监督", "偏好对齐", "奖励模型", "安全对齐"],
+                    link: "#",
+                    enabled: false
+                },
+                {
+                    code: "SFT", name: "监督微调", icon: "🎓",
+                    desc: "研究基于代码指令和示例的模型微调技术。",
+                    sub: ["指令微调", "Code SFT", "代码生成微调", "代码理解微调", "领域微调"],
+                    link: "#",
+                    enabled: false
+                },
+                {
+                    code: "REASON", name: "推理增强", icon: "🧠",
+                    desc: "研究提升大模型代码推理能力的技术和方法。",
+                    sub: ["代码推理", "CoT", "Self-Consistency", "代码验证", "推理RL"],
+                    link: "#",
+                    enabled: false
+                },
+                {
+                    code: "TOOL", name: "工具增强模型", icon: "🔧",
+                    desc: "研究大模型使用代码工具和外部资源的能力。",
+                    sub: ["代码执行", "Function calling", "API调用", "代码审查工具", "代码搜索"],
+                    link: "#",
+                    enabled: false
+                }
+            ]
+        },
+        'math': {
+            name: '数学领域',
+            icon: '🔢',
+            methods: [
+                {
+                    code: "ALIGN", name: "后训练对齐", icon: "🎯",
+                    desc: "研究大模型在数学领域的后训练对齐技术，包括RLHF、DPO等方法。",
+                    sub: ["RLHF", "DPO", "RLAIF", "过程监督", "偏好对齐", "奖励模型"],
+                    link: "#",
+                    enabled: false
+                },
+                {
+                    code: "REASON", name: "推理增强", icon: "🧠",
+                    desc: "研究提升大模型数学推理能力的技术和方法。",
+                    sub: ["数学推理", "CoT", "Chain-of-Thought", "数学证明", "推理RL", "GRPO", "Process Supervision"],
+                    link: "#",
+                    enabled: false
+                },
+                {
+                    code: "SFT", name: "监督微调", icon: "🎓",
+                    desc: "研究基于数学指令和示例的模型微调技术。",
+                    sub: ["数学指令微调", "CoT SFT", "数学问题微调", "数学证明微调"],
+                    link: "#",
+                    enabled: false
+                },
+                {
+                    code: "PT", name: "预训练", icon: "📚",
+                    desc: "研究大模型在数学领域的基础预训练技术和方法。",
+                    sub: ["数学语言建模", "数学数据预训练", "数学知识预训练"],
+                    link: "#",
+                    enabled: false
+                }
+            ]
+        },
+        'general': {
+            name: '通用领域',
+            icon: '🌐',
+            methods: [
+                {
+                    code: "ALIGN", name: "后训练对齐", icon: "🎯",
+                    desc: "研究大模型的后训练对齐技术，包括RLHF、DPO等方法。",
+                    sub: ["RLHF", "DPO", "RLAIF", "过程监督", "偏好对齐", "奖励模型", "安全对齐"],
+                    link: "charts/alignment/alignment-chart.html?domain=general",
+                    enabled: true
+                },
+                {
+                    code: "PT", name: "预训练", icon: "📚",
+                    desc: "研究大模型的基础预训练技术和方法。",
+                    sub: ["自监督语言建模", "因果语言模型", "掩码语言建模", "多模态预训练", "CLIP", "视觉语言模型"],
+                    link: "#",
+                    enabled: false
+                },
+                {
+                    code: "SFT", name: "监督微调", icon: "🎓",
+                    desc: "研究基于指令和示例的模型微调技术。",
+                    sub: ["指令微调", "Instruction Tuning", "CoT微调", "CoT SFT", "领域微调", "金融/法律/医学", "多轮对话微调"],
+                    link: "#",
+                    enabled: false
+                },
+                {
+                    code: "REASON", name: "推理增强", icon: "🧠",
+                    desc: "研究提升大模型推理能力的技术和方法。",
+                    sub: ["CoT", "Chain-of-Thought", "Self-Consistency", "Verifier-based Reasoning", "推理RL", "DAPO", "GRPO"],
+                    link: "#",
+                    enabled: false
+                },
+                {
+                    code: "MLLM", name: "多模态大模型", icon: "🖼️",
+                    desc: "研究融合多种模态信息的大模型技术。",
+                    sub: ["文本-图像", "VLM", "视觉语言模型", "文本-视频", "VLM-Video", "文本-语音", "文本-3D"],
+                    link: "#",
+                    enabled: false
+                },
+                {
+                    code: "TOOL", name: "工具增强模型", icon: "🔧",
+                    desc: "研究大模型使用工具和外部资源的能力。",
+                    sub: ["RAG", "检索增强生成", "Agent规划", "Toolformer", "Function calling", "工具调用", "API调用"],
+                    link: "#",
+                    enabled: false
+                },
+                {
+                    code: "COMPRESS", name: "模型压缩/部署", icon: "📦",
+                    desc: "研究大模型的压缩、量化和高效部署技术。",
+                    sub: ["蒸馏", "Distillation", "量化", "Quantization", "剪枝", "Pruning", "高效推理"],
+                    link: "#",
+                    enabled: false
+                },
+                {
+                    code: "EVAL", name: "模型评测/评价", icon: "📊",
+                    desc: "研究大模型能力的评测方法和评价体系。",
+                    sub: ["推理评测", "事实性评测", "安全性评测", "能力覆盖评测", "基准测试", "人工评估"],
+                    link: "#",
+                    enabled: false
+                }
+            ]
+        },
+        'reasoning': {
+            name: '推理领域',
+            icon: '🧠',
+            methods: [
+                {
+                    code: "REASON", name: "推理增强", icon: "🧠",
+                    desc: "研究提升大模型推理能力的技术和方法。",
+                    sub: ["CoT", "Chain-of-Thought", "Self-Consistency", "Verifier-based Reasoning", "推理RL", "DAPO", "GRPO", "Process Supervision"],
+                    link: "#",
+                    enabled: false
+                },
+                {
+                    code: "ALIGN", name: "后训练对齐", icon: "🎯",
+                    desc: "研究大模型在推理领域的后训练对齐技术。",
+                    sub: ["RLHF", "DPO", "RLAIF", "过程监督", "偏好对齐"],
+                    link: "charts/alignment/alignment-chart.html?domain=reasoning",
+                    enabled: true
+                },
+                {
+                    code: "SFT", name: "监督微调", icon: "🎓",
+                    desc: "研究基于推理指令和示例的模型微调技术。",
+                    sub: ["推理指令微调", "CoT SFT", "推理链微调"],
+                    link: "#",
+                    enabled: false
+                }
+            ]
+        },
+        'multimodal': {
+            name: '多模态领域',
+            icon: '🖼️',
+            methods: [
+                {
+                    code: "MLLM", name: "多模态大模型", icon: "🖼️",
+                    desc: "研究融合多种模态信息的大模型技术。",
+                    sub: ["文本-图像", "VLM", "视觉语言模型", "文本-视频", "VLM-Video", "文本-语音", "文本-3D", "场景理解"],
+                    link: "#",
+                    enabled: false
+                },
+                {
+                    code: "PT", name: "预训练", icon: "📚",
+                    desc: "研究多模态大模型的基础预训练技术和方法。",
+                    sub: ["多模态预训练", "CLIP", "视觉语言模型", "视频预训练", "音频预训练", "Speech-LM"],
+                    link: "#",
+                    enabled: false
+                },
+                {
+                    code: "ALIGN", name: "后训练对齐", icon: "🎯",
+                    desc: "研究多模态大模型的后训练对齐技术。",
+                    sub: ["多模态对齐", "RLHF", "DPO", "视觉对齐"],
+                    link: "#",
+                    enabled: false
+                }
+            ]
+        }
+    };
+
+    // 获取当前领域信息
+    const currentDomain = domainMethods[domain] || domainMethods['general'];
+    
+    // 更新页面标题和面包屑
+    document.getElementById('domain-badge').textContent = `${currentDomain.icon} ${currentDomain.name}`;
+    document.getElementById('current-domain').textContent = currentDomain.name;
+
+    const grid = document.getElementById('grid');
+
+    currentDomain.methods.forEach((method, index) => {
+        const card = document.createElement('a');
+        // 只有 enabled 为 true 的方法才可点击
+        const isClickable = method.enabled === true && method.link && method.link !== '#';
+        
+        if (isClickable) {
+            card.href = method.link;
+            card.className = 'card';
+        } else {
+            card.href = '#';
+            card.className = 'card disabled';
+            card.onclick = (e) => e.preventDefault();
+        }
+        
+        card.style.animationDelay = `${index * 0.05}s`;
+
+        const tagsHtml = method.sub.map(tag => `<span class="tag">${tag}</span>`).join('');
+
+        card.innerHTML = `
+            <div class="card-header">
+                <span class="subject-code">${method.code}</span>
+                <span class="subject-icon">${method.icon}</span>
+            </div>
+            <div class="card-body">
+                <h3 class="card-title">${method.name}</h3>
+                <p class="card-desc">${method.desc}</p>
+                <div class="tags">
+                    ${tagsHtml}
+                </div>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+
+    </script>
+
+</body>
+</html>
+

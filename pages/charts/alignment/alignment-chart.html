@@ -46,6 +46,47 @@
         }
         .legend-info span { font-weight: bold; margin-right: 5px; color: #fff; }
 
+        .shape-filter {
+            margin-top: 20px;
+            display: flex;
+            gap: 20px;
+            font-size: 13px;
+            color: #8b949e;
+            background: #161b22;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid #30363d;
+            justify-content: center;
+        }
+
+        .shape-filter label {
+            color: #8b949e;
+        }
+
+        .shape-filter input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .shape-filter label:hover {
+            color: #fff;
+        }
+
+        body.light-theme .shape-filter {
+            background: #ffffff;
+            border-color: #d0d7de;
+            color: #57606a;
+        }
+
+        body.light-theme .shape-filter label {
+            color: #57606a;
+        }
+
+        body.light-theme .shape-filter label:hover {
+            color: #24292f;
+        }
+
         #data-stats {
             margin-top: 8px;
             font-size: 13px;
@@ -387,6 +428,20 @@
         <div id="loading-msg">正在加载数据...</div>
     </div>
 
+    <!-- 形状筛选器 -->
+    <div class="shape-filter">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
+            <input type="checkbox" id="filter-general" checked>
+            <span>●</span>
+            <span>通用对话 (General Chat)</span>
+        </label>
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
+            <input type="checkbox" id="filter-reasoning" checked>
+            <span>▲</span>
+            <span>数学/推理 (Reasoning)</span>
+        </label>
+    </div>
+
     <!-- 静态辅助图例 -->
     <div class="legend-info">
         <div><span>●</span> 通用对话 (General Chat)</div>
@@ -416,6 +471,7 @@
         // 如果没有指定，默认使用当前目录的 data.json
         const urlParams = new URLSearchParams(window.location.search);
         const dataFile = urlParams.get('data') || 'data.json';
+        const domainParam = urlParams.get('domain') || ''; // 获取领域参数
         
         const CONFIG = {
             // 数据文件路径（可通过 URL 参数 ?data=xxx.json 指定）
@@ -433,6 +489,22 @@
                 'reasoning': 'triangle'
             }
         };
+
+        // 根据URL参数设置默认勾选状态
+        const filterGeneral = document.getElementById('filter-general');
+        const filterReasoning = document.getElementById('filter-reasoning');
+        
+        if (domainParam === 'general') {
+            filterGeneral.checked = true;
+            filterReasoning.checked = false;
+        } else if (domainParam === 'reasoning') {
+            filterGeneral.checked = false;
+            filterReasoning.checked = true;
+        } else {
+            // 默认都勾选
+            filterGeneral.checked = true;
+            filterReasoning.checked = true;
+        }
 
         // --- 主题配置 ---
         const THEME_STYLES = {
@@ -455,8 +527,10 @@
         let currentTheme = 'light';
         let lastOption = null;
         let allData = []; // 存储所有数据用于查找相似点
+        let filteredData = []; // 存储过滤后的数据
         let verificationData = {}; // 存储验证实验数据
         let commentsData = {}; // 存储评论数据
+        let seriesListCache = null; // 缓存系列数据
 
         // --- 初始化 ECharts ---
         const chartDom = document.getElementById('chart-container');
@@ -532,6 +606,169 @@
             return verificationByLevel;
         }
 
+        // 根据形状筛选过滤数据
+        function filterDataByShape(data) {
+            const showGeneral = filterGeneral.checked;
+            const showReasoning = filterReasoning.checked;
+            
+            if (showGeneral && showReasoning) {
+                return data; // 显示所有数据
+            } else if (showGeneral) {
+                return data.filter(item => item.domain === 'general');
+            } else if (showReasoning) {
+                return data.filter(item => item.domain === 'reasoning');
+            } else {
+                return []; // 都不勾选时返回空数组
+            }
+        }
+
+        // 更新图表数据
+        function updateChart() {
+            filteredData = filterDataByShape(allData);
+            
+            const seriesGroups = {};
+            
+            Object.keys(CONFIG.colors).forEach(groupName => {
+                seriesGroups[groupName] = [];
+            });
+
+            const totalCount = allData.length;
+            let usedCount = 0;
+            let skippedCount = 0;
+
+            filteredData.forEach(item => {
+                if (!seriesGroups[item.cluster]) {
+                    seriesGroups[item.cluster] = [];
+                }
+
+                const dateValue = item.date;
+                const valueNum = typeof item.value === 'number' ? item.value : Number(item.value);
+
+                if (!dateValue || Number.isNaN(new Date(dateValue).getTime()) || Number.isNaN(valueNum)) {
+                    skippedCount++;
+                    console.warn('跳过无效数据点:', item);
+                    return;
+                }
+
+                seriesGroups[item.cluster].push({
+                    name: item.name,
+                    value: [dateValue, valueNum],
+                    symbol: CONFIG.shapes[item.domain] || 'circle',
+                    symbolSize: item.domain === 'reasoning' ? 18 : 14,
+                    customData: item 
+                });
+
+                usedCount++;
+            });
+
+            if (dataStats) {
+                dataStats.textContent = `当前展示 ${usedCount} / ${totalCount} 个数据点`;
+            }
+
+            const seriesList = Object.keys(seriesGroups).map(groupName => ({
+                name: groupName,
+                type: 'scatter',
+                itemStyle: { 
+                    color: CONFIG.colors[groupName] || '#888'
+                },
+                data: seriesGroups[groupName],
+                markPoint: {
+                    data: [{type: 'max', name: 'Max'}]
+                }
+            }));
+
+            seriesListCache = seriesList;
+
+            const theme = THEME_STYLES[currentTheme];
+
+            const option = {
+                backgroundColor: 'transparent',
+                tooltip: {
+                    trigger: 'item',
+                    backgroundColor: theme.tooltipBg,
+                    borderColor: theme.border,
+                    textStyle: { color: theme.text },
+                    padding: 15,
+                    formatter: function (params) {
+                        const info = params.data.customData;
+                        if (!info) return '';
+                        
+                        return `
+                            <div style="font-size: 16px; font-weight: bold; color: ${params.color}; margin-bottom: 5px;">
+                                ${info.name}
+                            </div>
+                            <div style="font-size: 12px; color: #8b949e; margin-bottom: 10px;">
+                                📅 ${info.date} &nbsp;|&nbsp; 🏷️ ${info.cluster}
+                            </div>
+                            <div style="border-top: 1px solid #30363d; padding-top: 8px; font-size: 13px;">
+                                <b style="color:#fff">📌 核心条件 (Representative Conditions):</b><br>
+                                <span style="color: #d2a8ff;">${info.conditions}</span>
+                            </div>
+                            <div style="margin-top: 8px; font-size: 13px;">
+                                <b style="color:#fff">📊 实验效果 (Experimental Results):</b><br>
+                                <span style="color: #7ee787;">${info.result}</span>
+                            </div>
+                        `;
+                    }
+                },
+                toolbox: {
+                    right: 20,
+                    top: 15,
+                    feature: {
+                        dataZoom: { yAxisIndex: 'none' },
+                        restore: {},
+                        saveAsImage: {}
+                    },
+                    iconStyle: {
+                        borderColor: theme.muted
+                    }
+                },
+                legend: {
+                    data: Object.keys(seriesGroups),
+                    bottom: 10,
+                    textStyle: { color: theme.muted }
+                },
+                grid: { top: '10%', left: '5%', right: '10%', bottom: '15%', containLabel: true },
+                dataZoom: [
+                    {
+                        type: 'inside',
+                        xAxisIndex: 0,
+                        filterMode: 'none'
+                    },
+                    {
+                        type: 'inside',
+                        yAxisIndex: 0,
+                        filterMode: 'none'
+                    }
+                ],
+                xAxis: {
+                    type: 'time',
+                    name: '时间 (Time)',
+                    nameTextStyle: { color: theme.muted },
+                    axisLabel: { 
+                        color: theme.muted, 
+                        formatter: function(value) {
+                            const date = new Date(value);
+                            return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0');
+                        }
+                    },
+                    splitLine: { show: true, lineStyle: { color: theme.grid, type: 'dashed' } }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '性能评分',
+                    nameTextStyle: { color: theme.muted },
+                    axisLabel: { show: false },
+                    splitLine: { show: true, lineStyle: { color: theme.grid, opacity: 0.3 } },
+                    min: 2, max: 11
+                },
+                series: seriesList
+            };
+
+            lastOption = option;
+            myChart.setOption(option, true);
+        }
+
         // --- 核心逻辑函数 ---
         async function initChart() {
             try {
@@ -565,149 +802,12 @@
                     console.warn('评论数据加载失败:', e);
                 }
 
-                const seriesGroups = {};
+                // 使用过滤函数更新图表
+                updateChart();
                 
-                Object.keys(CONFIG.colors).forEach(groupName => {
-                    seriesGroups[groupName] = [];
-                });
-
-                const totalCount = rawData.length;
-                let usedCount = 0;
-                let skippedCount = 0;
-
-                rawData.forEach(item => {
-                    if (!seriesGroups[item.cluster]) {
-                        seriesGroups[item.cluster] = [];
-                    }
-
-                    const dateValue = item.date;
-                    const valueNum = typeof item.value === 'number' ? item.value : Number(item.value);
-
-                    if (!dateValue || Number.isNaN(new Date(dateValue).getTime()) || Number.isNaN(valueNum)) {
-                        skippedCount++;
-                        console.warn('跳过无效数据点:', item);
-                        return;
-                    }
-
-                    seriesGroups[item.cluster].push({
-                        name: item.name,
-                        value: [dateValue, valueNum],
-                        symbol: CONFIG.shapes[item.domain] || 'circle',
-                        symbolSize: item.domain === 'reasoning' ? 18 : 14,
-                        customData: item 
-                    });
-
-                    usedCount++;
-                });
-
                 console.info(
-                    `对齐图谱: 从 JSON 读取 ${totalCount} 条记录, 成功绘制 ${usedCount} 条, 跳过 ${skippedCount} 条。`
+                    `对齐图谱: 从 JSON 读取 ${allData.length} 条记录, 当前显示 ${filteredData.length} 条。`
                 );
-
-                if (dataStats) {
-                    dataStats.textContent = `当前展示 ${usedCount} / ${totalCount} 个数据点`;
-                }
-
-                const seriesList = Object.keys(seriesGroups).map(groupName => ({
-                    name: groupName,
-                    type: 'scatter',
-                    itemStyle: { 
-                        color: CONFIG.colors[groupName] || '#888'
-                    },
-                    data: seriesGroups[groupName],
-                    markPoint: {
-                        data: [{type: 'max', name: 'Max'}]
-                    }
-                }));
-
-                const theme = THEME_STYLES[currentTheme];
-
-                const option = {
-                    backgroundColor: 'transparent',
-                    tooltip: {
-                        trigger: 'item',
-                        backgroundColor: theme.tooltipBg,
-                        borderColor: theme.border,
-                        textStyle: { color: theme.text },
-                        padding: 15,
-                        formatter: function (params) {
-                            const info = params.data.customData;
-                            if (!info) return '';
-                            
-                            return `
-                                <div style="font-size: 16px; font-weight: bold; color: ${params.color}; margin-bottom: 5px;">
-                                    ${info.name}
-                                </div>
-                                <div style="font-size: 12px; color: #8b949e; margin-bottom: 10px;">
-                                    📅 ${info.date} &nbsp;|&nbsp; 🏷️ ${info.cluster}
-                                </div>
-                                <div style="border-top: 1px solid #30363d; padding-top: 8px; font-size: 13px;">
-                                    <b style="color:#fff">📌 核心条件 (Representative Conditions):</b><br>
-                                    <span style="color: #d2a8ff;">${info.conditions}</span>
-                                </div>
-                                <div style="margin-top: 8px; font-size: 13px;">
-                                    <b style="color:#fff">📊 实验效果 (Experimental Results):</b><br>
-                                    <span style="color: #7ee787;">${info.result}</span>
-                                </div>
-                            `;
-                        }
-                    },
-                    toolbox: {
-                        right: 20,
-                        top: 15,
-                        feature: {
-                            dataZoom: { yAxisIndex: 'none' },
-                            restore: {},
-                            saveAsImage: {}
-                        },
-                        iconStyle: {
-                            borderColor: theme.muted
-                        }
-                    },
-                    legend: {
-                        data: Object.keys(seriesGroups),
-                        bottom: 10,
-                        textStyle: { color: theme.muted }
-                    },
-                    grid: { top: '10%', left: '5%', right: '10%', bottom: '15%', containLabel: true },
-                    dataZoom: [
-                        {
-                            type: 'inside',
-                            xAxisIndex: 0,
-                            filterMode: 'none'
-                        },
-                        {
-                            type: 'inside',
-                            yAxisIndex: 0,
-                            filterMode: 'none'
-                        }
-                    ],
-                    xAxis: {
-                        type: 'time',
-                        name: '时间 (Time)',
-                        nameTextStyle: { color: theme.muted },
-                        axisLabel: { 
-                            color: theme.muted, 
-                            formatter: function(value) {
-                                const date = new Date(value);
-                                return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0');
-                            }
-                        },
-                        splitLine: { show: true, lineStyle: { color: theme.grid, type: 'dashed' } }
-                    },
-                    yAxis: {
-                        type: 'value',
-                        name: '性能评分',
-                        nameTextStyle: { color: theme.muted },
-                        axisLabel: { show: false },
-                        splitLine: { show: true, lineStyle: { color: theme.grid, opacity: 0.3 } },
-                        min: 2, max: 11
-                    },
-                    series: seriesList
-                };
-
-                lastOption = option;
-                myChart.setOption(option);
                 
                 // 添加点击事件监听
                 myChart.on('click', function(params) {
@@ -1282,6 +1382,10 @@
             const fullItem = allData.find(d => d.id === item.id) || item;
             _showDetailModalInternal(fullItem);
         };
+
+        // 绑定形状筛选器的change事件
+        filterGeneral.addEventListener('change', updateChart);
+        filterReasoning.addEventListener('change', updateChart);
 
         // --- 启动 ---
         initChart();
