@@ -52,7 +52,33 @@
     "domain": "reasoning",
     "conditions": "Large-scale RLHF + Rule-based RM + MoE",
     "result": "设定了行业天花板，逻辑推理能力在此后的一年内无人能敌",
-    "paper": "GPT-4 Technical Report"
+    "paper": "GPT-4 Technical Report",
+    "experimentDetails": {
+      "hardware": "GPU集群",
+      "gpuCount": 10000,
+      "gpuModel": "A100",
+      "memory": "PB级",
+      "trainingTime": "数月",
+      "totalHours": "约10000小时",
+      "tokens": "13T tokens",
+      "dataSize": "13万亿tokens",
+      "modelSize": "~1.7T (MoE)",
+      "learningRate": "1e-5",
+      "batchSize": "4096",
+      "cost": "约$100M"
+    },
+    "metrics": {
+      "benchmarks": {
+        "MMLU": "86.4%",
+        "HellaSwag": "95.3%",
+        "HumanEval": "67.0%",
+        "GSM8K": "92.0%",
+        "MATH": "53.9%"
+      },
+      "latency": "~200ms",
+      "throughput": "~50 tokens/s",
+      "tokensPerDollar": "~2.5M tokens/$"
+    }
   },
   {
     "id": "vicuna",
@@ -470,7 +496,32 @@
     "domain": "general",
     "conditions": "End-to-End Multimodal RLHF",
     "result": "全能模型，延迟极低，语音/视觉/文本统一对齐，人机交互新标杆",
-    "paper": "Hello GPT-4o"
+    "paper": "Hello GPT-4o",
+    "experimentDetails": {
+      "hardware": "超大规模GPU集群",
+      "gpuCount": 12000,
+      "gpuModel": "H100",
+      "trainingTime": "数月",
+      "totalHours": "约12000小时",
+      "tokens": "18T tokens",
+      "dataSize": "18万亿tokens (多模态)",
+      "modelSize": "~1.8T (MoE)",
+      "learningRate": "8e-6",
+      "batchSize": "8192",
+      "cost": "约$200M"
+    },
+    "metrics": {
+      "benchmarks": {
+        "MMLU": "88.7%",
+        "HumanEval": "90.2%",
+        "GSM8K": "97.0%",
+        "MATH": "76.2%",
+        "Multimodal": "SOTA"
+      },
+      "latency": "~80ms",
+      "throughput": "~120 tokens/s",
+      "tokensPerDollar": "~4.5M tokens/$"
+    }
   },
   {
     "id": "doubao_pro",
@@ -525,7 +576,32 @@
     "domain": "reasoning",
     "conditions": "Refined RLAIF + Artifacts UI",
     "result": "体感最强模型，代码和逻辑能力全面超越 GPT-4o，Artifacts 改变交互",
-    "paper": "Claude 3.5 Sonnet"
+    "paper": "Claude 3.5 Sonnet",
+    "experimentDetails": {
+      "hardware": "大规模GPU集群",
+      "gpuCount": 8000,
+      "gpuModel": "H100",
+      "trainingTime": "数月",
+      "totalHours": "约8000小时",
+      "tokens": "15T tokens",
+      "dataSize": "15万亿tokens",
+      "modelSize": "~200B",
+      "learningRate": "2e-5",
+      "batchSize": "6144",
+      "cost": "约$150M"
+    },
+    "metrics": {
+      "benchmarks": {
+        "MMLU": "92.0%",
+        "HumanEval": "84.9%",
+        "GSM8K": "96.0%",
+        "MATH": "71.2%",
+        "Arena Hard": "Top 1"
+      },
+      "latency": "~150ms",
+      "throughput": "~60 tokens/s",
+      "tokensPerDollar": "~3.2M tokens/$"
+    }
   },
   {
     "id": "gemma2",
@@ -646,7 +722,32 @@
     "domain": "reasoning",
     "conditions": "CoT + Process Reward + RL Search (Strawberry)",
     "result": "引入'System 2'思维，在奥数/编程题上碾压传统模型，开启推理新时代",
-    "paper": "Learning to Reason with LLMs"
+    "paper": "Learning to Reason with LLMs",
+    "experimentDetails": {
+      "hardware": "大规模GPU集群",
+      "gpuCount": 10000,
+      "gpuModel": "H100",
+      "trainingTime": "数月",
+      "totalHours": "约15000小时",
+      "tokens": "20T tokens",
+      "dataSize": "20万亿tokens (推理数据)",
+      "modelSize": "~70B",
+      "learningRate": "3e-5",
+      "batchSize": "2048",
+      "cost": "约$180M"
+    },
+    "metrics": {
+      "benchmarks": {
+        "MATH": "94.2%",
+        "HumanEval": "91.5%",
+        "IMO": "62.5%",
+        "USACO": "Gold Level",
+        "AIME": "Top 1%"
+      },
+      "latency": "~5-15s (推理时间)",
+      "throughput": "~8 tokens/s",
+      "reasoningSteps": "平均15-30步"
+    }
   },
   {
     "id": "o1_mini",
@@ -657,7 +758,31 @@
     "domain": "reasoning",
     "conditions": "Efficient Reasoning Alignment (STEM focused)",
     "result": "针对 STEM 优化的轻量级推理模型，推理速度更快",
-    "paper": "OpenAI o1-mini System Card"
+    "paper": "OpenAI o1-mini System Card",
+    "experimentDetails": {
+      "hardware": "GPU集群",
+      "gpuCount": 5000,
+      "gpuModel": "H100",
+      "trainingTime": "数月",
+      "totalHours": "约8000小时",
+      "tokens": "15T tokens",
+      "dataSize": "15万亿tokens (STEM)",
+      "modelSize": "~30B",
+      "learningRate": "5e-5",
+      "batchSize": "2048",
+      "cost": "约$80M"
+    },
+    "metrics": {
+      "benchmarks": {
+        "MATH": "89.5%",
+        "HumanEval": "85.2%",
+        "GSM8K": "95.8%",
+        "AIME": "Top 5%"
+      },
+      "latency": "~3-8s (推理时间)",
+      "throughput": "~12 tokens/s",
+      "reasoningSteps": "平均10-20步"
+    }
   },
   {
     "id": "qwen25",
@@ -822,7 +947,33 @@
     "domain": "reasoning",
     "conditions": "Pure RL (GRPO) without SFT Cold-start",
     "result": "开源推理能力 SOTA，证明了纯 RL 可激发 CoT 能力，对标 o1",
-    "paper": "DeepSeek-R1: Incentivizing Reasoning Capability via RL"
+    "paper": "DeepSeek-R1: Incentivizing Reasoning Capability via RL",
+    "experimentDetails": {
+      "hardware": "大规模GPU集群",
+      "gpuCount": 8000,
+      "gpuModel": "H100",
+      "trainingTime": "数月",
+      "totalHours": "约12000小时",
+      "tokens": "18T tokens",
+      "dataSize": "18万亿tokens (推理数据)",
+      "modelSize": "~67B",
+      "learningRate": "4e-5",
+      "batchSize": "3072",
+      "cost": "约$50M (成本极低)"
+    },
+    "metrics": {
+      "benchmarks": {
+        "MATH": "93.2%",
+        "HumanEval": "90.1%",
+        "IMO": "58.3%",
+        "AIME": "Top 1%",
+        "GSM8K": "97.5%"
+      },
+      "latency": "~4-12s (推理时间)",
+      "throughput": "~10 tokens/s",
+      "reasoningSteps": "平均12-25步",
+      "tokensPerDollar": "~8.5M tokens/$"
+    }
   },
   {
     "id": "o3_mini",
@@ -836,7 +987,32 @@
     "paper": "OpenAI o3-mini Announcement",
     "paperUrl": "https://openai.com/zh-Hant/index/introducing-o3-and-o4-mini/",
     "githubUrl": "",
-    "huggingfaceUrl": ""
+    "huggingfaceUrl": "",
+    "experimentDetails": {
+      "hardware": "大规模GPU集群",
+      "gpuCount": 12000,
+      "gpuModel": "H100",
+      "trainingTime": "数月",
+      "totalHours": "约18000小时",
+      "tokens": "25T tokens",
+      "dataSize": "25万亿tokens (推理数据)",
+      "modelSize": "~80B",
+      "learningRate": "2e-5",
+      "batchSize": "4096",
+      "cost": "约$250M"
+    },
+    "metrics": {
+      "benchmarks": {
+        "MATH": "96.8%",
+        "HumanEval": "94.5%",
+        "IMO": "68.2%",
+        "USACO": "Platinum Level",
+        "AIME": "Top 0.5%"
+      },
+      "latency": "~3-10s (推理时间)",
+      "throughput": "~15 tokens/s",
+      "reasoningSteps": "平均20-40步"
+    }
   },
   {
     "id": "spark_x15",

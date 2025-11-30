@@ -771,6 +771,50 @@
             });
         }
 
+        // 填充默认实验条件
+        function fillDefaultExperimentDetails(item) {
+            if (!item.experimentDetails) {
+                item.experimentDetails = {};
+            }
+            const defaults = {
+                hardware: item.experimentDetails.hardware || "GPU集群",
+                gpuCount: item.experimentDetails.gpuCount || "未说明",
+                gpuModel: item.experimentDetails.gpuModel || "未说明",
+                memory: item.experimentDetails.memory || "未说明",
+                trainingTime: item.experimentDetails.trainingTime || item.experimentDetails.time || "未说明",
+                totalHours: item.experimentDetails.totalHours || "未说明",
+                epochs: item.experimentDetails.epochs || "未说明",
+                iterations: item.experimentDetails.iterations || "未说明",
+                dataset: item.experimentDetails.dataset || item.experimentDetails.dataSize || "未说明",
+                dataSize: item.experimentDetails.dataSize || "未说明",
+                samples: item.experimentDetails.samples || "未说明",
+                tokens: item.experimentDetails.tokens || "未说明",
+                hyperparameters: item.experimentDetails.hyperparameters || "未说明",
+                learningRate: item.experimentDetails.learningRate || "未说明",
+                batchSize: item.experimentDetails.batchSize || "未说明",
+                modelSize: item.experimentDetails.modelSize || "未说明",
+                trainingLog: item.experimentDetails.trainingLog || null,
+                cost: item.experimentDetails.cost || null
+            };
+            return Object.assign({}, defaults, item.experimentDetails);
+        }
+
+        // 填充默认指标
+        function fillDefaultMetrics(item) {
+            if (!item.metrics) {
+                item.metrics = {};
+            }
+            const defaults = {
+                benchmarks: item.metrics.benchmarks || {},
+                latency: item.metrics.latency || "未说明",
+                throughput: item.metrics.throughput || "未说明",
+                tokensPerDollar: item.metrics.tokensPerDollar || null,
+                reasoningSteps: item.metrics.reasoningSteps || null,
+                additionalMetrics: item.metrics.additionalMetrics || null
+            };
+            return Object.assign({}, defaults, item.metrics);
+        }
+
         // 显示详情模态框（内部函数）
         async function _showDetailModalInternal(item, isVerificationExperiment = false) {
             // 如果不是验证实验，保存为原始数据点
@@ -782,8 +826,15 @@
                 if (backBtn) backBtn.style.display = 'block';
             }
             
+            // 填充默认值
+            const enrichedItem = {
+                ...item,
+                experimentDetails: fillDefaultExperimentDetails(item),
+                metrics: fillDefaultMetrics(item)
+            };
+            
             // 查找验证数据（只有非验证实验才查找，避免嵌套）
-            const verificationByLevel = isVerificationExperiment ? { A: [], B: [], C: [] } : findSimilarPoints(item);
+            const verificationByLevel = isVerificationExperiment ? { A: [], B: [], C: [] } : findSimilarPoints(enrichedItem);
             
             // 计算各级别的数量（完全基于实际数据，不使用随机数）
             const verification = {
@@ -795,7 +846,10 @@
                 total: verificationByLevel.A.length + verificationByLevel.B.length + verificationByLevel.C.length
             };
             
-            document.getElementById('modal-title').textContent = item.name;
+            // 使用 enrichedItem 替代 item
+            const displayItem = enrichedItem;
+            
+            document.getElementById('modal-title').textContent = displayItem.name;
             
             // 如果是验证实验，不显示分级验证部分
             const showVerificationSection = !isVerificationExperiment;
@@ -805,28 +859,27 @@
                 <div class="detail-section">
                     <div class="section-title">📄 基本信息</div>
                     <div class="section-content">
-                        <p><strong>日期:</strong> ${item.date}</p>
-                        <p><strong>分类:</strong> ${item.cluster}</p>
-                        <p><strong>领域:</strong> ${item.domain === 'general' ? '通用对话' : '数学/推理'}</p>
-                        <p><strong>科研价值:</strong> ${item.value}</p>
+                        <p><strong>日期:</strong> ${displayItem.date}</p>
+                        <p><strong>分类:</strong> ${displayItem.cluster}</p>
+                        <p><strong>领域:</strong> ${displayItem.domain === 'general' ? '通用对话' : '数学/推理'}</p>
+                        <p><strong>科研价值:</strong> ${displayItem.value}</p>
                     </div>
                 </div>
 
                 <div class="detail-section">
                     <div class="section-title">📌 核心条件</div>
                     <div class="section-content">
-                        <p>${item.conditions}</p>
+                        <p>${displayItem.conditions}</p>
                     </div>
                 </div>
 
                 <div class="detail-section">
                     <div class="section-title">📊 实验效果</div>
                     <div class="section-content">
-                        <p>${item.result}</p>
+                        <p>${displayItem.result}</p>
                     </div>
                 </div>
 
-                ${item.experimentDetails ? `
                 <div class="detail-section">
                     <div class="section-title">⚙️ 详细实验条件（资源消耗）</div>
                     <div class="section-content">
@@ -834,66 +887,64 @@
                             <div style="padding: 12px; background: #f6f8fa; border-radius: 6px; border-left: 3px solid #0969da;">
                                 <div style="font-weight: 600; color: #0969da; margin-bottom: 6px;">🖥️ 硬件资源</div>
                                 <div style="font-size: 13px; color: #57606a;">
-                                    ${item.experimentDetails.hardware || item.experimentDetails.gpu || '未说明'}
-                                    ${item.experimentDetails.gpuCount ? ` (${item.experimentDetails.gpuCount}块)` : ''}
-                                    ${item.experimentDetails.gpuModel ? ` - ${item.experimentDetails.gpuModel}` : ''}
-                                    ${item.experimentDetails.memory ? `<br>内存: ${item.experimentDetails.memory}` : ''}
-                                    ${item.experimentDetails.cpu ? `<br>CPU: ${item.experimentDetails.cpu}` : ''}
+                                    ${displayItem.experimentDetails.hardware || displayItem.experimentDetails.gpu || '未说明'}
+                                    ${displayItem.experimentDetails.gpuCount && displayItem.experimentDetails.gpuCount !== '未说明' ? ` (${displayItem.experimentDetails.gpuCount}块)` : ''}
+                                    ${displayItem.experimentDetails.gpuModel && displayItem.experimentDetails.gpuModel !== '未说明' ? ` - ${displayItem.experimentDetails.gpuModel}` : ''}
+                                    ${displayItem.experimentDetails.memory && displayItem.experimentDetails.memory !== '未说明' ? `<br>内存: ${displayItem.experimentDetails.memory}` : ''}
+                                    ${displayItem.experimentDetails.cpu ? `<br>CPU: ${displayItem.experimentDetails.cpu}` : ''}
                                 </div>
                             </div>
                             <div style="padding: 12px; background: #f6f8fa; border-radius: 6px; border-left: 3px solid #1a7f37;">
                                 <div style="font-weight: 600; color: #1a7f37; margin-bottom: 6px;">⏱️ 时间消耗</div>
                                 <div style="font-size: 13px; color: #57606a;">
-                                    ${item.experimentDetails.trainingTime || item.experimentDetails.time || '未说明'}
-                                    ${item.experimentDetails.totalHours ? `<br>总训练时长: ${item.experimentDetails.totalHours} 小时` : ''}
-                                    ${item.experimentDetails.epochs ? `<br>训练轮数: ${item.experimentDetails.epochs}` : ''}
-                                    ${item.experimentDetails.iterations ? `<br>迭代次数: ${item.experimentDetails.iterations}` : ''}
+                                    ${displayItem.experimentDetails.trainingTime || displayItem.experimentDetails.time || '未说明'}
+                                    ${displayItem.experimentDetails.totalHours && displayItem.experimentDetails.totalHours !== '未说明' ? `<br>总训练时长: ${displayItem.experimentDetails.totalHours} 小时` : ''}
+                                    ${displayItem.experimentDetails.epochs && displayItem.experimentDetails.epochs !== '未说明' ? `<br>训练轮数: ${displayItem.experimentDetails.epochs}` : ''}
+                                    ${displayItem.experimentDetails.iterations && displayItem.experimentDetails.iterations !== '未说明' ? `<br>迭代次数: ${displayItem.experimentDetails.iterations}` : ''}
                                 </div>
                             </div>
                             <div style="padding: 12px; background: #f6f8fa; border-radius: 6px; border-left: 3px solid #cf222e;">
                                 <div style="font-weight: 600; color: #cf222e; margin-bottom: 6px;">📦 数据量</div>
                                 <div style="font-size: 13px; color: #57606a;">
-                                    ${item.experimentDetails.dataset || item.experimentDetails.dataSize || '未说明'}
-                                    ${item.experimentDetails.dataSize ? `<br>数据集大小: ${item.experimentDetails.dataSize}` : ''}
-                                    ${item.experimentDetails.samples ? `<br>样本数量: ${item.experimentDetails.samples}` : ''}
-                                    ${item.experimentDetails.tokens ? `<br>Token数: ${item.experimentDetails.tokens}` : ''}
+                                    ${displayItem.experimentDetails.dataset || displayItem.experimentDetails.dataSize || '未说明'}
+                                    ${displayItem.experimentDetails.dataSize && displayItem.experimentDetails.dataSize !== '未说明' ? `<br>数据集大小: ${displayItem.experimentDetails.dataSize}` : ''}
+                                    ${displayItem.experimentDetails.samples && displayItem.experimentDetails.samples !== '未说明' ? `<br>样本数量: ${displayItem.experimentDetails.samples}` : ''}
+                                    ${displayItem.experimentDetails.tokens && displayItem.experimentDetails.tokens !== '未说明' ? `<br>Token数: ${displayItem.experimentDetails.tokens}` : ''}
                                 </div>
                             </div>
                             <div style="padding: 12px; background: #f6f8fa; border-radius: 6px; border-left: 3px solid #8250df;">
                                 <div style="font-weight: 600; color: #8250df; margin-bottom: 6px;">🔧 超参数配置</div>
                                 <div style="font-size: 13px; color: #57606a;">
-                                    ${item.experimentDetails.hyperparameters || '未说明'}
-                                    ${item.experimentDetails.learningRate ? `<br>学习率: ${item.experimentDetails.learningRate}` : ''}
-                                    ${item.experimentDetails.batchSize ? `<br>批次大小: ${item.experimentDetails.batchSize}` : ''}
-                                    ${item.experimentDetails.modelSize ? `<br>模型大小: ${item.experimentDetails.modelSize}` : ''}
+                                    ${displayItem.experimentDetails.hyperparameters || '未说明'}
+                                    ${displayItem.experimentDetails.learningRate && displayItem.experimentDetails.learningRate !== '未说明' ? `<br>学习率: ${displayItem.experimentDetails.learningRate}` : ''}
+                                    ${displayItem.experimentDetails.batchSize && displayItem.experimentDetails.batchSize !== '未说明' ? `<br>批次大小: ${displayItem.experimentDetails.batchSize}` : ''}
+                                    ${displayItem.experimentDetails.modelSize && displayItem.experimentDetails.modelSize !== '未说明' ? `<br>模型大小: ${displayItem.experimentDetails.modelSize}` : ''}
                                 </div>
                             </div>
                         </div>
-                        ${item.experimentDetails.trainingLog ? `
+                        ${displayItem.experimentDetails.trainingLog ? `
                             <div style="margin-top: 15px; padding: 12px; background: #fff8e1; border-radius: 6px; border-left: 3px solid #f59e0b;">
                                 <div style="font-weight: 600; color: #f59e0b; margin-bottom: 6px;">📋 训练日志</div>
-                                <div style="font-size: 13px; color: #57606a;">${item.experimentDetails.trainingLog}</div>
+                                <div style="font-size: 13px; color: #57606a;">${displayItem.experimentDetails.trainingLog}</div>
                             </div>
                         ` : ''}
-                        ${item.experimentDetails.cost ? `
+                        ${displayItem.experimentDetails.cost ? `
                             <div style="margin-top: 15px; padding: 12px; background: #f0f9ff; border-radius: 6px; border-left: 3px solid #0284c7;">
                                 <div style="font-weight: 600; color: #0284c7; margin-bottom: 6px;">💰 计算成本</div>
-                                <div style="font-size: 13px; color: #57606a;">${item.experimentDetails.cost}</div>
+                                <div style="font-size: 13px; color: #57606a;">${displayItem.experimentDetails.cost}</div>
                             </div>
                         ` : ''}
                     </div>
                 </div>
-                ` : ''}
 
-                ${item.metrics ? `
                 <div class="detail-section">
                     <div class="section-title">📈 详细实验指标（Benchmark结果）</div>
                     <div class="section-content">
-                        ${item.metrics.benchmarks ? `
+                        ${Object.keys(displayItem.metrics.benchmarks || {}).length > 0 ? `
                             <div style="margin-top: 10px;">
                                 <div style="font-weight: 600; margin-bottom: 12px; color: #24292f;">核心Benchmark结果:</div>
                                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
-                                    ${Object.entries(item.metrics.benchmarks).map(([benchmark, value]) => `
+                                    ${Object.entries(displayItem.metrics.benchmarks).map(([benchmark, value]) => `
                                         <div style="padding: 12px; background: linear-gradient(135deg, #f6f8fa 0%, #ffffff 100%); border-radius: 6px; border: 1px solid #d0d7de;">
                                             <div style="font-weight: 600; color: #0969da; margin-bottom: 6px; font-size: 14px;">${benchmark}</div>
                                             <div style="font-size: 18px; font-weight: 700; color: #24292f;">${typeof value === 'object' ? JSON.stringify(value, null, 2) : value}</div>
@@ -903,58 +954,51 @@
                             </div>
                         ` : ''}
                         <div style="margin-top: 15px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
-                            ${item.metrics.performance ? `
+                            ${displayItem.metrics.latency && displayItem.metrics.latency !== '未说明' ? `
                                 <div style="padding: 12px; background: #f6f8fa; border-radius: 6px;">
-                                    <div style="font-weight: 600; color: #0969da; margin-bottom: 6px; font-size: 13px;">整体性能</div>
-                                    <div style="font-size: 14px; color: #57606a;">${item.metrics.performance}</div>
+                                    <div style="font-weight: 600; color: #8250df; margin-bottom: 6px; font-size: 13px;">⏱️ 延迟</div>
+                                    <div style="font-size: 14px; color: #57606a;">${displayItem.metrics.latency}</div>
                                 </div>
                             ` : ''}
-                            ${item.metrics.accuracy ? `
+                            ${displayItem.metrics.throughput && displayItem.metrics.throughput !== '未说明' ? `
                                 <div style="padding: 12px; background: #f6f8fa; border-radius: 6px;">
-                                    <div style="font-weight: 600; color: #1a7f37; margin-bottom: 6px; font-size: 13px;">准确性</div>
-                                    <div style="font-size: 14px; color: #57606a;">${item.metrics.accuracy}</div>
+                                    <div style="font-weight: 600; color: #f59e0b; margin-bottom: 6px; font-size: 13px;">📊 吞吐量</div>
+                                    <div style="font-size: 14px; color: #57606a;">${displayItem.metrics.throughput}</div>
                                 </div>
                             ` : ''}
-                            ${item.metrics.efficiency ? `
+                            ${displayItem.metrics.tokensPerDollar ? `
                                 <div style="padding: 12px; background: #f6f8fa; border-radius: 6px;">
-                                    <div style="font-weight: 600; color: #cf222e; margin-bottom: 6px; font-size: 13px;">效率</div>
-                                    <div style="font-size: 14px; color: #57606a;">${item.metrics.efficiency}</div>
+                                    <div style="font-weight: 600; color: #1a7f37; margin-bottom: 6px; font-size: 13px;">💰 性价比</div>
+                                    <div style="font-size: 14px; color: #57606a;">${displayItem.metrics.tokensPerDollar}</div>
                                 </div>
                             ` : ''}
-                            ${item.metrics.latency ? `
+                            ${displayItem.metrics.reasoningSteps ? `
                                 <div style="padding: 12px; background: #f6f8fa; border-radius: 6px;">
-                                    <div style="font-weight: 600; color: #8250df; margin-bottom: 6px; font-size: 13px;">延迟</div>
-                                    <div style="font-size: 14px; color: #57606a;">${item.metrics.latency}</div>
-                                </div>
-                            ` : ''}
-                            ${item.metrics.throughput ? `
-                                <div style="padding: 12px; background: #f6f8fa; border-radius: 6px;">
-                                    <div style="font-weight: 600; color: #f59e0b; margin-bottom: 6px; font-size: 13px;">吞吐量</div>
-                                    <div style="font-size: 14px; color: #57606a;">${item.metrics.throughput}</div>
+                                    <div style="font-weight: 600; color: #0969da; margin-bottom: 6px; font-size: 13px;">🧠 推理步数</div>
+                                    <div style="font-size: 14px; color: #57606a;">${displayItem.metrics.reasoningSteps}</div>
                                 </div>
                             ` : ''}
                         </div>
-                        ${item.metrics.additionalMetrics ? `
+                        ${displayItem.metrics.additionalMetrics ? `
                             <div style="margin-top: 15px; padding: 12px; background: #fff8e1; border-radius: 6px; border-left: 3px solid #f59e0b;">
                                 <div style="font-weight: 600; color: #f59e0b; margin-bottom: 8px;">其他指标</div>
                                 <div style="font-size: 13px; color: #57606a; line-height: 1.8;">
-                                    ${typeof item.metrics.additionalMetrics === 'object' 
-                                        ? Object.entries(item.metrics.additionalMetrics).map(([key, value]) => 
+                                    ${typeof displayItem.metrics.additionalMetrics === 'object' 
+                                        ? Object.entries(displayItem.metrics.additionalMetrics).map(([key, value]) => 
                                             `<strong>${key}:</strong> ${typeof value === 'object' ? JSON.stringify(value) : value}<br>`
                                         ).join('')
-                                        : item.metrics.additionalMetrics}
+                                        : displayItem.metrics.additionalMetrics}
                                 </div>
                             </div>
                         ` : ''}
                     </div>
                 </div>
-                ` : ''}
 
                 <div class="detail-section">
                     <div class="section-title">💬 评论区</div>
                     <div class="section-content">
                         ${(() => {
-                            const itemComments = commentsData[item.id] || {};
+                            const itemComments = commentsData[displayItem.id] || {};
                             const status = itemComments.reproductionStatus || '已验证';
                             const comments = itemComments.comments || [];
                             
@@ -1031,33 +1075,33 @@
                 <div class="detail-section">
                     <div class="section-title">🔗 原始内容链接</div>
                     <div class="section-content">
-                        <a href="${item.sourceUrl || item.paperUrl || `https://arxiv.org/search/?query=${encodeURIComponent(item.source || item.paper || '')}`}" target="_blank" class="link-item">
-                            📄 数据来源: ${item.source || item.paper || '未知'}
+                        <a href="${displayItem.sourceUrl || displayItem.paperUrl || `https://arxiv.org/search/?query=${encodeURIComponent(displayItem.source || displayItem.paper || '')}`}" target="_blank" class="link-item">
+                            📄 数据来源: ${displayItem.source || displayItem.paper || '未知'}
                         </a>
                         <br><br>
-                        ${item.codeUrl ? `
-                            <a href="${item.codeUrl}" target="_blank" class="link-item">
-                                💻 验证实验代码: ${item.codeUrl}
+                        ${displayItem.codeUrl ? `
+                            <a href="${displayItem.codeUrl}" target="_blank" class="link-item">
+                                💻 验证实验代码: ${displayItem.codeUrl}
                             </a>
                             <br><br>
                         ` : ''}
-                        ${item.githubUrl ? `
-                            <a href="${item.githubUrl}" target="_blank" class="link-item">
-                                💻 GitHub 代码库: ${item.githubUrl}
+                        ${displayItem.githubUrl ? `
+                            <a href="${displayItem.githubUrl}" target="_blank" class="link-item">
+                                💻 GitHub 代码库: ${displayItem.githubUrl}
                             </a>
                             <br><br>
                         ` : `
-                            <a href="https://github.com/search?q=${encodeURIComponent(item.name)}" target="_blank" class="link-item">
+                            <a href="https://github.com/search?q=${encodeURIComponent(displayItem.name)}" target="_blank" class="link-item">
                                 💻 GitHub 代码库
                             </a>
                             <br><br>
                         `}
-                        ${item.huggingfaceUrl ? `
-                            <a href="${item.huggingfaceUrl}" target="_blank" class="link-item">
-                                🤗 HuggingFace 模型: ${item.huggingfaceUrl}
+                        ${displayItem.huggingfaceUrl ? `
+                            <a href="${displayItem.huggingfaceUrl}" target="_blank" class="link-item">
+                                🤗 HuggingFace 模型: ${displayItem.huggingfaceUrl}
                             </a>
                         ` : `
-                            <a href="https://huggingface.co/search?q=${encodeURIComponent(item.name)}" target="_blank" class="link-item">
+                            <a href="https://huggingface.co/search?q=${encodeURIComponent(displayItem.name)}" target="_blank" class="link-item">
                                 🤗 HuggingFace 模型
                             </a>
                         `}
@@ -1066,7 +1110,7 @@
             `;
             
             // 渲染每个级别的验证实验列表
-            renderVerificationLevels(verificationByLevel, item);
+            renderVerificationLevels(verificationByLevel, displayItem);
             
             // 绑定验证等级点击事件（展开/收起）
             document.querySelectorAll('.verification-badge').forEach(badge => {
