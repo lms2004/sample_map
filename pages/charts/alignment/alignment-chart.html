@@ -776,27 +776,35 @@
             if (!item.experimentDetails) {
                 item.experimentDetails = {};
             }
+            // 清理 undefined 值
+            const cleanDetails = {};
+            Object.keys(item.experimentDetails).forEach(key => {
+                if (item.experimentDetails[key] !== undefined && item.experimentDetails[key] !== 'undefined') {
+                    cleanDetails[key] = item.experimentDetails[key];
+                }
+            });
+            
             const defaults = {
-                hardware: item.experimentDetails.hardware || "GPU集群",
-                gpuCount: item.experimentDetails.gpuCount || "未说明",
-                gpuModel: item.experimentDetails.gpuModel || "未说明",
-                memory: item.experimentDetails.memory || "未说明",
-                trainingTime: item.experimentDetails.trainingTime || item.experimentDetails.time || "未说明",
-                totalHours: item.experimentDetails.totalHours || "未说明",
-                epochs: item.experimentDetails.epochs || "未说明",
-                iterations: item.experimentDetails.iterations || "未说明",
-                dataset: item.experimentDetails.dataset || item.experimentDetails.dataSize || "未说明",
-                dataSize: item.experimentDetails.dataSize || "未说明",
-                samples: item.experimentDetails.samples || "未说明",
-                tokens: item.experimentDetails.tokens || "未说明",
-                hyperparameters: item.experimentDetails.hyperparameters || "未说明",
-                learningRate: item.experimentDetails.learningRate || "未说明",
-                batchSize: item.experimentDetails.batchSize || "未说明",
-                modelSize: item.experimentDetails.modelSize || "未说明",
-                trainingLog: item.experimentDetails.trainingLog || null,
-                cost: item.experimentDetails.cost || null
+                hardware: cleanDetails.hardware || "GPU集群",
+                gpuCount: cleanDetails.gpuCount || "未说明",
+                gpuModel: cleanDetails.gpuModel || "未说明",
+                memory: cleanDetails.memory || "未说明",
+                trainingTime: cleanDetails.trainingTime || cleanDetails.time || "未说明",
+                totalHours: cleanDetails.totalHours || "未说明",
+                epochs: cleanDetails.epochs || "未说明",
+                iterations: cleanDetails.iterations || "未说明",
+                dataset: cleanDetails.dataset || cleanDetails.dataSize || "未说明",
+                dataSize: cleanDetails.dataSize || "未说明",
+                samples: cleanDetails.samples || "未说明",
+                tokens: cleanDetails.tokens || "未说明",
+                hyperparameters: cleanDetails.hyperparameters || "未说明",
+                learningRate: cleanDetails.learningRate || "未说明",
+                batchSize: cleanDetails.batchSize || "未说明",
+                modelSize: cleanDetails.modelSize || "未说明",
+                trainingLog: cleanDetails.trainingLog || null,
+                cost: cleanDetails.cost || null
             };
-            return Object.assign({}, defaults, item.experimentDetails);
+            return Object.assign({}, defaults, cleanDetails);
         }
 
         // 填充默认指标
@@ -804,15 +812,26 @@
             if (!item.metrics) {
                 item.metrics = {};
             }
+            // 清理 undefined 值
+            const cleanMetrics = {};
+            Object.keys(item.metrics).forEach(key => {
+                if (item.metrics[key] !== undefined && item.metrics[key] !== 'undefined') {
+                    cleanMetrics[key] = item.metrics[key];
+                }
+            });
+            
             const defaults = {
-                benchmarks: item.metrics.benchmarks || {},
-                latency: item.metrics.latency || "未说明",
-                throughput: item.metrics.throughput || "未说明",
-                tokensPerDollar: item.metrics.tokensPerDollar || null,
-                reasoningSteps: item.metrics.reasoningSteps || null,
-                additionalMetrics: item.metrics.additionalMetrics || null
+                benchmarks: cleanMetrics.benchmarks || {},
+                latency: cleanMetrics.latency || "未说明",
+                throughput: cleanMetrics.throughput || "未说明",
+                tokensPerDollar: cleanMetrics.tokensPerDollar || null,
+                reasoningSteps: cleanMetrics.reasoningSteps || null,
+                performance: cleanMetrics.performance || null,
+                accuracy: cleanMetrics.accuracy || null,
+                efficiency: cleanMetrics.efficiency || null,
+                additionalMetrics: cleanMetrics.additionalMetrics || null
             };
-            return Object.assign({}, defaults, item.metrics);
+            return Object.assign({}, defaults, cleanMetrics);
         }
 
         // 显示详情模态框（内部函数）
@@ -976,6 +995,24 @@
                                 <div style="padding: 12px; background: #f6f8fa; border-radius: 6px;">
                                     <div style="font-weight: 600; color: #0969da; margin-bottom: 6px; font-size: 13px;">🧠 推理步数</div>
                                     <div style="font-size: 14px; color: #57606a;">${displayItem.metrics.reasoningSteps}</div>
+                                </div>
+                            ` : ''}
+                            ${displayItem.metrics.performance && displayItem.metrics.performance !== 'undefined' ? `
+                                <div style="padding: 12px; background: #f6f8fa; border-radius: 6px;">
+                                    <div style="font-weight: 600; color: #1a7f37; margin-bottom: 6px; font-size: 13px;">⚡ 性能</div>
+                                    <div style="font-size: 14px; color: #57606a;">${displayItem.metrics.performance}</div>
+                                </div>
+                            ` : ''}
+                            ${displayItem.metrics.accuracy && displayItem.metrics.accuracy !== 'undefined' ? `
+                                <div style="padding: 12px; background: #f6f8fa; border-radius: 6px;">
+                                    <div style="font-weight: 600; color: #0969da; margin-bottom: 6px; font-size: 13px;">🎯 准确性</div>
+                                    <div style="font-size: 14px; color: #57606a;">${displayItem.metrics.accuracy}</div>
+                                </div>
+                            ` : ''}
+                            ${displayItem.metrics.efficiency && displayItem.metrics.efficiency !== 'undefined' ? `
+                                <div style="padding: 12px; background: #f6f8fa; border-radius: 6px;">
+                                    <div style="font-weight: 600; color: #f59e0b; margin-bottom: 6px; font-size: 13px;">🚀 效率</div>
+                                    <div style="font-size: 14px; color: #57606a;">${displayItem.metrics.efficiency}</div>
                                 </div>
                             ` : ''}
                         </div>
@@ -1164,13 +1201,19 @@
                                     复现结果: ${point.result || '待验证'}
                                 </div>
                                 ${point.codeUrl ? `<div style="font-size: 11px; color: #0969da; margin-top: 2px;">🔗 代码: ${point.codeUrl}</div>` : ''}
-                                ${point.experimentDetails ? `
-                                    <div style="font-size: 11px; color: #57606a; margin-top: 4px;">
-                                        📋 超参数: ${point.experimentDetails.hyperparameters} | 
-                                        训练日志: ${point.experimentDetails.trainingLog} | 
-                                        硬件: ${point.experimentDetails.hardware || '未说明'}
-                                    </div>
-                                ` : ''}
+                                ${point.experimentDetails ? (() => {
+                                    const details = [];
+                                    if (point.experimentDetails.hyperparameters && point.experimentDetails.hyperparameters !== 'undefined') {
+                                        details.push(`📋 超参数: ${point.experimentDetails.hyperparameters}`);
+                                    }
+                                    if (point.experimentDetails.trainingLog && point.experimentDetails.trainingLog !== 'undefined') {
+                                        details.push(`训练日志: ${point.experimentDetails.trainingLog}`);
+                                    }
+                                    if (point.experimentDetails.hardware) {
+                                        details.push(`硬件: ${point.experimentDetails.hardware}`);
+                                    }
+                                    return details.length > 0 ? `<div style="font-size: 11px; color: #57606a; margin-top: 4px;">${details.join(' | ')}</div>` : '';
+                                })() : ''}
                             </div>
                         `).join('')}
                     `;
