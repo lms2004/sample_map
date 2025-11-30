@@ -803,30 +803,137 @@
                     <div class="section-title">📊 实验效果</div>
                     <div class="section-content">
                         <p>${item.result}</p>
-                        ${item.experimentDetails ? `
-                            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #d0d7de;">
-                                <strong>实验详情:</strong>
-                                <ul style="margin-top: 8px; padding-left: 20px;">
-                                    <li>超参数: ${item.experimentDetails.hyperparameters}</li>
-                                    <li>训练日志: ${item.experimentDetails.trainingLog}</li>
-                                    <li>数据集: ${item.experimentDetails.dataset}</li>
-                                    <li>硬件: ${item.experimentDetails.hardware}</li>
-                                    <li>训练时间: ${item.experimentDetails.trainingTime}</li>
-                                </ul>
+                    </div>
+                </div>
+
+                ${item.experimentDetails || item.measurementDetails ? `
+                <div class="detail-section">
+                    <div class="section-title">⚙️ 详细测量条件</div>
+                    <div class="section-content">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 10px;">
+                            <div style="padding: 12px; background: #f6f8fa; border-radius: 6px; border-left: 3px solid #0969da;">
+                                <div style="font-weight: 600; color: #0969da; margin-bottom: 6px;">📱 测量设备</div>
+                                <div style="font-size: 13px; color: #57606a;">
+                                    ${item.source || item.experimentDetails?.device || item.measurementDetails?.device || '未说明'}
+                                    ${item.experimentDetails?.deviceModel || item.measurementDetails?.deviceModel ? `<br>设备型号: ${item.experimentDetails.deviceModel || item.measurementDetails.deviceModel}` : ''}
+                                    ${item.experimentDetails?.sensorType || item.measurementDetails?.sensorType ? `<br>传感器类型: ${item.experimentDetails.sensorType || item.measurementDetails.sensorType}` : ''}
+                                    ${item.experimentDetails?.samplingRate || item.measurementDetails?.samplingRate ? `<br>采样频率: ${item.experimentDetails.samplingRate || item.measurementDetails.samplingRate}` : ''}
+                                </div>
                             </div>
-                        ` : ''}
-                        ${item.metrics ? `
-                            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #d0d7de;">
-                                <strong>性能指标:</strong>
-                                <ul style="margin-top: 8px; padding-left: 20px;">
-                                    <li>性能: ${item.metrics.performance}</li>
-                                    <li>准确性: ${item.metrics.accuracy}</li>
-                                    <li>效率: ${item.metrics.efficiency}</li>
-                                </ul>
+                            <div style="padding: 12px; background: #f6f8fa; border-radius: 6px; border-left: 3px solid #1a7f37;">
+                                <div style="font-weight: 600; color: #1a7f37; margin-bottom: 6px;">⏰ 测量时间</div>
+                                <div style="font-size: 13px; color: #57606a;">
+                                    ${item.date || '未说明'}
+                                    ${item.experimentDetails?.measurementTime || item.measurementDetails?.measurementTime ? `<br>具体时间: ${item.experimentDetails.measurementTime || item.measurementDetails.measurementTime}` : ''}
+                                    ${item.experimentDetails?.duration || item.measurementDetails?.duration ? `<br>测量时长: ${item.experimentDetails.duration || item.measurementDetails.duration}` : ''}
+                                    ${item.experimentDetails?.timeOfDay || item.measurementDetails?.timeOfDay ? `<br>时段: ${item.experimentDetails.timeOfDay || item.measurementDetails.timeOfDay}` : ''}
+                                </div>
+                            </div>
+                            <div style="padding: 12px; background: #f6f8fa; border-radius: 6px; border-left: 3px solid #cf222e;">
+                                <div style="font-weight: 600; color: #cf222e; margin-bottom: 6px;">🌡️ 测量环境</div>
+                                <div style="font-size: 13px; color: #57606a;">
+                                    ${item.experimentDetails?.environment || item.measurementDetails?.environment || item.conditions || '未说明'}
+                                    ${item.experimentDetails?.temperature || item.measurementDetails?.temperature ? `<br>环境温度: ${item.experimentDetails.temperature || item.measurementDetails.temperature}°C` : ''}
+                                    ${item.experimentDetails?.humidity || item.measurementDetails?.humidity ? `<br>湿度: ${item.experimentDetails.humidity || item.measurementDetails.humidity}%` : ''}
+                                    ${item.experimentDetails?.location || item.measurementDetails?.location ? `<br>位置: ${item.experimentDetails.location || item.measurementDetails.location}` : ''}
+                                </div>
+                            </div>
+                            <div style="padding: 12px; background: #f6f8fa; border-radius: 6px; border-left: 3px solid #8250df;">
+                                <div style="font-weight: 600; color: #8250df; margin-bottom: 6px;">💪 身体状态</div>
+                                <div style="font-size: 13px; color: #57606a;">
+                                    ${item.conditions || item.experimentDetails?.bodyState || item.measurementDetails?.bodyState || '未说明'}
+                                    ${item.experimentDetails?.activityType || item.measurementDetails?.activityType ? `<br>活动类型: ${item.experimentDetails.activityType || item.measurementDetails.activityType}` : ''}
+                                    ${item.experimentDetails?.sleepStage || item.measurementDetails?.sleepStage ? `<br>睡眠阶段: ${item.experimentDetails.sleepStage || item.measurementDetails.sleepStage}` : ''}
+                                    ${item.experimentDetails?.stressLevel || item.measurementDetails?.stressLevel ? `<br>压力水平: ${item.experimentDetails.stressLevel || item.measurementDetails.stressLevel}` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        ${item.experimentDetails?.notes || item.measurementDetails?.notes ? `
+                            <div style="margin-top: 15px; padding: 12px; background: #fff8e1; border-radius: 6px; border-left: 3px solid #f59e0b;">
+                                <div style="font-weight: 600; color: #f59e0b; margin-bottom: 6px;">📝 备注信息</div>
+                                <div style="font-size: 13px; color: #57606a;">${item.experimentDetails.notes || item.measurementDetails.notes}</div>
                             </div>
                         ` : ''}
                     </div>
                 </div>
+                ` : ''}
+
+                ${item.metrics || item.healthMetrics ? `
+                <div class="detail-section">
+                    <div class="section-title">📈 详细健康指标</div>
+                    <div class="section-content">
+                        <div style="margin-top: 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                            <div style="padding: 12px; background: linear-gradient(135deg, #fee2e2 0%, #ffffff 100%); border-radius: 6px; border: 1px solid #fca5a5;">
+                                <div style="font-weight: 600; color: #dc2626; margin-bottom: 6px; font-size: 13px;">❤️ 心率值</div>
+                                <div style="font-size: 24px; font-weight: 700; color: #dc2626;">${item.value || item.metrics?.heartRate || item.healthMetrics?.heartRate || 'N/A'}</div>
+                                <div style="font-size: 12px; color: #57534e; margin-top: 4px;">bpm (次/分钟)</div>
+                            </div>
+                            ${item.metrics?.heartRateZone || item.healthMetrics?.heartRateZone ? `
+                                <div style="padding: 12px; background: #f6f8fa; border-radius: 6px;">
+                                    <div style="font-weight: 600; color: #1a7f37; margin-bottom: 6px; font-size: 13px;">🎯 心率区间</div>
+                                    <div style="font-size: 16px; font-weight: 600; color: #1a7f37;">${item.metrics.heartRateZone || item.healthMetrics.heartRateZone}</div>
+                                    ${item.metrics.zonePercentage || item.healthMetrics.zonePercentage ? `<div style="font-size: 12px; color: #57534e; margin-top: 4px;">占比: ${item.metrics.zonePercentage || item.healthMetrics.zonePercentage}%</div>` : ''}
+                                </div>
+                            ` : ''}
+                            ${item.metrics?.exerciseIntensity || item.healthMetrics?.exerciseIntensity ? `
+                                <div style="padding: 12px; background: #f6f8fa; border-radius: 6px;">
+                                    <div style="font-weight: 600; color: #cf222e; margin-bottom: 6px; font-size: 13px;">💪 运动强度</div>
+                                    <div style="font-size: 16px; font-weight: 600; color: #cf222e;">${item.metrics.exerciseIntensity || item.healthMetrics.exerciseIntensity}</div>
+                                </div>
+                            ` : ''}
+                            ${item.metrics?.recoveryTime || item.healthMetrics?.recoveryTime ? `
+                                <div style="padding: 12px; background: #f6f8fa; border-radius: 6px;">
+                                    <div style="font-weight: 600; color: #8250df; margin-bottom: 6px; font-size: 13px;">⏱️ 恢复时间</div>
+                                    <div style="font-size: 16px; font-weight: 600; color: #8250df;">${item.metrics.recoveryTime || item.healthMetrics.recoveryTime}</div>
+                                </div>
+                            ` : ''}
+                            ${item.metrics?.hrv || item.healthMetrics?.hrv ? `
+                                <div style="padding: 12px; background: #f6f8fa; border-radius: 6px;">
+                                    <div style="font-weight: 600; color: #0969da; margin-bottom: 6px; font-size: 13px;">📊 心率变异性</div>
+                                    <div style="font-size: 16px; font-weight: 600; color: #0969da;">${item.metrics.hrv || item.healthMetrics.hrv} ms</div>
+                                </div>
+                            ` : ''}
+                            ${item.metrics?.healthAssessment || item.healthMetrics?.healthAssessment ? `
+                                <div style="padding: 12px; background: #f6f8fa; border-radius: 6px;">
+                                    <div style="font-weight: 600; color: #1a7f37; margin-bottom: 6px; font-size: 13px;">✅ 健康评估</div>
+                                    <div style="font-size: 14px; color: #57606a;">${item.metrics.healthAssessment || item.healthMetrics.healthAssessment}</div>
+                                </div>
+                            ` : ''}
+                        </div>
+                        ${item.metrics?.caloriesBurned || item.healthMetrics?.caloriesBurned ? `
+                            <div style="margin-top: 15px; padding: 12px; background: #fff8e1; border-radius: 6px; border-left: 3px solid #f59e0b;">
+                                <div style="font-weight: 600; color: #f59e0b; margin-bottom: 8px;">🔥 卡路里消耗</div>
+                                <div style="font-size: 16px; font-weight: 600; color: #f59e0b;">${item.metrics.caloriesBurned || item.healthMetrics.caloriesBurned} 千卡</div>
+                            </div>
+                        ` : ''}
+                        ${item.metrics?.additionalHealthMetrics || item.healthMetrics?.additionalMetrics ? `
+                            <div style="margin-top: 15px; padding: 12px; background: #f0f9ff; border-radius: 6px; border-left: 3px solid #0284c7;">
+                                <div style="font-weight: 600; color: #0284c7; margin-bottom: 8px;">📋 其他健康指标</div>
+                                <div style="font-size: 13px; color: #57606a; line-height: 1.8;">
+                                    ${typeof (item.metrics?.additionalHealthMetrics || item.healthMetrics?.additionalMetrics) === 'object' 
+                                        ? Object.entries(item.metrics?.additionalHealthMetrics || item.healthMetrics?.additionalMetrics).map(([key, value]) => 
+                                            `<strong>${key}:</strong> ${typeof value === 'object' ? JSON.stringify(value) : value}<br>`
+                                        ).join('')
+                                        : (item.metrics?.additionalHealthMetrics || item.healthMetrics?.additionalMetrics)}
+                                </div>
+                            </div>
+                        ` : ''}
+                        ${item.metrics?.benchmarks ? `
+                            <div style="margin-top: 15px;">
+                                <div style="font-weight: 600; margin-bottom: 12px; color: #24292f;">健康评估基准:</div>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
+                                    ${Object.entries(item.metrics.benchmarks).map(([benchmark, value]) => `
+                                        <div style="padding: 12px; background: linear-gradient(135deg, #f6f8fa 0%, #ffffff 100%); border-radius: 6px; border: 1px solid #d0d7de;">
+                                            <div style="font-weight: 600; color: #0969da; margin-bottom: 6px; font-size: 14px;">${benchmark}</div>
+                                            <div style="font-size: 18px; font-weight: 700; color: #24292f;">${typeof value === 'object' ? JSON.stringify(value, null, 2) : value}</div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+                ` : ''}
 
                 <div class="detail-section">
                     <div class="section-title">💬 评论区</div>
