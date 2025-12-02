@@ -1,0 +1,78 @@
+{
+	"URL": "https://arxiv.org/abs/1502.05477",
+  "method_name": "GRPO",
+  "full_name": "Group Relative Policy Optimization",
+  "category": "reinforcement_learning",
+
+  "base_algorithm": {
+    "derived_from": "PPO (Proximal Policy Optimization)",
+    "key_modification": "移除 critic/value model，使用组内多个采样输出的平均奖励作为 baseline 估计 advantage；KL 散度正则化直接加入损失函数而非奖励函数中"
+  },
+
+  "data_source": {
+    "sampling_strategy": "online"
+  },
+
+  "reward_function": {
+    "type": "model-based",
+    "granularity": ["outcome_supervision", "process_supervision"]
+  },
+
+  "gradient_coefficient": {
+    "description": "对每个问题采样 G 个输出，奖励归一化为 r̃_i = (r_i - mean(r)) / std(r)；outcome supervision 下所有 token 的 advantage 等于归一化奖励；process supervision 下每个 token 的 advantage 为后续步骤归一化奖励之和",
+    "formula": "GC_GRPO(q, o, t, π_rm) = Â_{i,t} + β * (π_ref(o_{i,t}|o_{i,<t}) / π_θ(o_{i,t}|o_{i,<t}) - 1)",
+    "normalization": "组内奖励减均值除标准差"
+  },
+
+  "training_paradigm": {
+    "iterative": true,
+    "reference_model_update": "每轮迭代开始时将 reference model 设为当前 policy model",
+    "reward_model_update": "基于策略模型采样结果持续训练 reward model，使用 10% 历史数据的 replay 机制"
+  },
+
+  "regularization": {
+    "type": "KL divergence",
+    "coefficient": 0.04,
+    "reference_model": "初始 SFT 模型（单轮训练）或上一轮迭代的 policy model（迭代训练）",
+    "kl_estimator": "无偏估计器: D_KL = π_ref/π_θ - log(π_ref/π_θ) - 1"
+  },
+
+  "efficiency": {
+    "value_model": false,
+    "samples_per_question": 64,
+    "batch_size": 1024,
+    "max_length": 1024,
+    "memory_advantage": "相比 PPO 显著降低内存消耗，因为无需训练与 policy model 同规模的 value model"
+  },
+
+  "empirical_results": {
+    "in_domain": {
+      "GSM8K": {
+        "before_rl": "82.9%",
+        "after_rl": "88.2%"
+      },
+      "MATH": {
+        "before_rl": "46.8%",
+        "after_rl": "51.7%"
+      }
+    },
+    "out_of_domain": {
+      "CMATH": {
+        "before_rl": "84.6%",
+        "after_rl": "88.8%"
+      },
+      "MGSM_zh": {
+        "before_rl": "73.2%",
+        "after_rl": "79.6%"
+      }
+    }
+  },
+
+  "theoretical_insight": {
+    "unified_paradigm": "论文提出统一范式分析 SFT、RFT、DPO、PPO、GRPO，所有方法可视为直接或简化的 RL 技术，核心差异在于 Data Source、Reward Function、Gradient Coefficient 三个维度",
+    "why_rl_works": "RL 提升 Maj@K 但不提升 Pass@K，表明改进来自使输出分布更鲁棒（将正确响应从 TopK 推向更高概率）而非基础推理能力的增强",
+    "group_relative_advantage": "组相对方式与 reward model 的比较训练性质天然契合，因为 reward model 通常在同一问题的输出比较数据集上训练",
+    "online_vs_offline": "Online 训练（如 GRPO）显著优于 Offline 训练（如 RFT），尤其在训练后期当策略与初始 SFT 模型差异增大时",
+    "process_vs_outcome": "Process supervision (GRPO+PS) 优于 Outcome supervision (GRPO+OS)，细粒度步骤级 gradient coefficient 更有效"
+  }
+}

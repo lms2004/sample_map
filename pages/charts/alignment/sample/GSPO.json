@@ -1,0 +1,135 @@
+{
+	"URL": "https://arxiv.org/abs/1502.05477",
+  "method_name": "GSPO",
+  "full_name": "Group Sequence Policy Optimization",
+  "category": "reinforcement_learning",
+
+  "base_algorithm": {
+    "derived_from": ["GRPO", "PPO"],
+    "key_modification": "将 token-level importance ratio 改为 sequence-level importance ratio，基于序列似然定义重要性比率，实现 sequence-level clipping、rewarding 和 optimization；通过长度归一化控制数值范围；消除了 token 间不等权重导致的梯度噪声累积"
+  },
+
+  "data_source": {
+    "sampling_strategy": "online"
+  },
+
+  "reward_function": {
+    "type": ["rule-based", "model-based"],
+    "type_detail": {
+      "math": "accuracy verifier (rule-based)",
+      "coding": "code execution server (rule-based)",
+      "general": "general reward model (model-based)"
+    },
+    "granularity": "outcome_supervision"
+  },
+
+  "gradient_coefficient": {
+    "advantage_normalization": "group-based，使用 mean 和 std 归一化：Â_i = (r(x,y_i) - mean) / std",
+    "importance_ratio": "sequence-level，采用长度归一化：s_i(θ) = (π_θ(y_i|x) / π_θold(y_i|x))^(1/|y_i|)",
+    "relative_reinforcement": "组内 G 个响应相互比较，优势值为归一化后的相对奖励"
+  },
+
+  "training_paradigm": {
+    "iterative": true,
+    "stages": [
+      "Stage 1: RL scaling for math and coding tasks",
+      "Stage 2: RL for general capabilities (instruction following, alignment, agent performance)"
+    ],
+    "reference_model_update": "使用 old policy πθold，具体更新频率未明确说明",
+    "reward_model_update": null
+  },
+
+  "regularization": {
+    "type": "KL divergence",
+    "coefficient": null,
+    "reference_model": "πθold",
+    "note": "论文为简洁起见省略了 KL 正则化项的详细描述"
+  },
+
+  "efficiency": {
+    "value_model": false,
+    "group_size": "G (每个 query 生成 G 个响应)",
+    "mini_batches": 4,
+    "clipping_range": {
+      "left": "3e-4",
+      "right": "4e-4"
+    },
+    "clipping_fraction": {
+      "GSPO": 0.15,
+      "GRPO": 0.0013,
+      "note": "GSPO 裁剪比例比 GRPO 高约 115 倍（两个数量级），但训练效率反而更高"
+    },
+    "routing_replay": "GSPO 不需要（GRPO 需要 Routing Replay 来稳定 MoE 训练）",
+    "inference_engine_compatibility": "GSPO 可直接使用推理引擎返回的序列似然，无需训练引擎重新计算"
+  },
+
+  "empirical_results": {
+    "base_model": "Qwen3-30B-A3B-Base (cold-start fine-tuned)",
+    "in_domain": {
+      "benchmarks": ["AIME'24", "LiveCodeBench (202410-202502)", "CodeForces Elo Rating", "Training Reward"],
+      "metrics": {
+        "AIME24": "average Pass@1 over 32 samplings",
+        "LiveCodeBench": "average Pass@1 over 8 samplings",
+        "CodeForces": "Elo Rating",
+        "Training_Reward": "accuracy on training tasks"
+      },
+      "final_performance": {
+        "GSPO": {
+          "Training_Reward": 0.72,
+          "AIME24": 83,
+          "LiveCodeBench": 68,
+          "CodeForces_Elo": 2100
+        },
+        "GRPO_with_Routing_Replay": {
+          "Training_Reward": 0.68,
+          "AIME24": 82,
+          "LiveCodeBench": 67,
+          "CodeForces_Elo": 1980
+        }
+      },
+      "comparison_summary": {
+        "training_reward_gap": "+0.04 (GSPO 领先约 5.9%)",
+        "AIME24_gap": "+1 point",
+        "LiveCodeBench_gap": "+1 point",
+        "CodeForces_gap": "+120 Elo",
+        "conclusion": "GSPO 在相同训练计算量下，所有指标均优于 GRPO，且训练曲线更平稳"
+      }
+    },
+    "ablation_study": {
+      "routing_replay_on_GRPO": {
+        "with_routing_replay": {
+          "final_training_reward": 0.57,
+          "trend": "稳定上升"
+        },
+        "without_routing_replay": {
+          "final_training_reward": 0.24,
+          "trend": "持续下降，训练失败（模型崩溃）"
+        },
+        "conclusion": "Routing Replay 对 GRPO 训练 MoE 模型至关重要，而 GSPO 无需此技术"
+      }
+    },
+    "out_of_domain": null
+  },
+
+  "theoretical_insight": {
+    "core_contribution": "指出 GRPO 的 token-level importance ratio 违背 importance sampling 基本原则，单样本无法完成分布校正",
+    "problem_with_grpo": [
+      "token-level importance weight 基于单样本，无法执行分布校正",
+      "引入高方差梯度噪声，随序列长度累积",
+      "clipping 机制进一步放大噪声",
+      "导致模型崩溃且往往不可逆"
+    ],
+    "gspo_solution": [
+      "sequence-level importance ratio 具有明确理论意义：反映响应 y 从 πθold 采样后偏离 πθ 的程度",
+      "与 sequence-level reward 和 optimization 对齐",
+      "所有 token 等权重，消除不稳定因素",
+      "长度归一化降低方差并统一数值范围"
+    ],
+    "moe_benefit": "GSPO 仅关注 sequence likelihood，对单个 token likelihood 不敏感，从根本上解决了 MoE 模型的 expert-activation volatility 问题",
+    "clipping_observation": {
+      "finding": "GSPO 裁剪的 token 比例 (15%) 比 GRPO (0.13%) 高约 115 倍",
+      "paradox": "尽管使用更少的样本进行训练，GSPO 的训练效率反而更高",
+      "interpretation": "说明 GRPO 的 token-level 梯度估计本质上是嘈杂且低效的，而 GSPO 的 sequence-level 方法提供了更可靠有效的学习信号"
+    }
+  }
+}

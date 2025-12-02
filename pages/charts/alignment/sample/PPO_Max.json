@@ -1,0 +1,63 @@
+{
+	"URL": "https://arxiv.org/abs/1502.05477",
+  "method_name": "PPO-max",
+  "full_name": "Proximal Policy Optimization Maximum (an advanced version of PPO for RLHF)",
+  "category": "reinforcement_learning",
+
+  "base_algorithm": {
+    "derived_from": "PPO (Proximal Policy Optimization)",
+    "key_modification": "集成多种稳定训练策略：reward normalization and clipping、token-level KL-penalty 约束策略优化、critic model 使用 reward model 初始化并预训练、global gradient clipping、小尺寸 experience buffer、可选的 pre-training loss (PPO-ptx)"
+  },
+
+  "data_source": {
+    "sampling_strategy": "online"
+  },
+
+  "reward_function": {
+    "type": "model-based",
+    "granularity": "outcome_supervision"
+  },
+
+  "gradient_coefficient": null,
+
+  "training_paradigm": {
+    "iterative": true,
+    "reference_model_update": "固定不更新，使用 SFT 模型初始化后保持不变",
+    "reward_model_update": "固定不更新，使用人类偏好数据预训练后保持不变"
+  },
+
+  "regularization": {
+    "type": "KL divergence penalty",
+    "coefficient": "η (论文中使用 0.05 等值，可调节)",
+    "reference_model": "SFT model (π_SFT)",
+    "description": "在 reward 中加入 token-level KL penalty: r_total = r(x,y) - η * KL(π_RL || π_SFT)"
+  },
+
+  "efficiency": {
+    "value_model": true,
+    "models_required": "4 个模型：policy model、value model (critic)、reward model、reference model",
+    "sampling_batch_size": 128,
+    "training_batch_size": 32,
+    "notes": "使用 ZERO2 和 gradient checkpoint 节省 GPU 显存"
+  },
+
+  "empirical_results": {
+    "in_domain": {
+      "description": "在中英文 helpful 和 harmless 数据集上进行人工评估和 GPT-4 评估",
+      "english_harmless": "RLHF 模型 62% vs SFT 模型 5% (人工偏好)",
+      "english_helpful": "RLHF 模型 44% vs SFT 模型 30% (人工偏好)",
+      "vs_chatgpt_english": "defeat rate 从 45% 降至 24%",
+      "vs_chatgpt_chinese": "defeat rate 从 37% 降至 29%"
+    },
+    "out_of_domain": {
+      "c_eval": "PPO-max 导致 NLU 能力下降，PPO-ptx 可缓解此问题"
+    }
+  },
+
+  "theoretical_insight": {
+    "key_finding": "策略约束 (policy constraints) 是 PPO 算法有效实现的关键因素",
+    "pattern_collapse": "vanilla PPO 训练中会出现 pattern collapse 现象，即 SFT 模型被过度优化，表现出高度偏向的行为",
+    "monitoring_metrics": "推荐使用 perplexity、response length、KL divergence 监控训练过程，这些指标比 reward score 和 loss 更能反映训练稳定性",
+    "reward_model_limitation": "reward score 与人工评估结果存在不一致性，更高的 reward 不一定代表更好的策略行为"
+  }
+}

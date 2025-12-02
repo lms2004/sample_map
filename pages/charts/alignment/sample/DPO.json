@@ -1,0 +1,98 @@
+{
+	"URL": "https://arxiv.org/abs/1502.05477",
+  "method_name": "DPO",
+  "full_name": "Direct Preference Optimization",
+  "category": "preference_optimization",
+
+  "base_algorithm": {
+    "derived_from": "RLHF (Bradley-Terry preference model + KL-constrained reward maximization)",
+    "key_modification": "通过变量替换将奖励函数重参数化为策略函数，推导出闭式最优策略表达式，从而将 RL 优化问题转化为简单的二元交叉熵分类损失，无需显式奖励模型和强化学习"
+  },
+
+  "data_source": {
+    "sampling_strategy": "offline",
+    "description": "使用预先收集的静态偏好数据集 D = {x, y_w, y_l}，偏好对由 SFT 模型采样并由人类标注"
+  },
+
+  "reward_function": {
+    "type": "model-based (implicit)",
+    "granularity": "outcome_supervision",
+    "description": "隐式奖励函数定义为 r(x,y) = β log(π_θ(y|x) / π_ref(y|x))，通过策略模型和参考模型的对数概率比隐式表示，无需单独训练奖励模型"
+  },
+
+  "gradient_coefficient": {
+    "weighting_mechanism": "动态 per-example 重要性权重",
+    "formula": "σ(r̂_θ(x, y_l) - r̂_θ(x, y_w))",
+    "description": "当隐式奖励模型对 dispreferred completion 评分错误地高于 preferred completion 时，该样本获得更高权重；权重由 β 缩放，反映 KL 约束强度",
+    "purpose": "防止朴素概率比目标导致的模型退化"
+  },
+
+  "training_paradigm": {
+    "iterative": false,
+    "reference_model_update": "固定不更新，初始化为 π_SFT；若 SFT 模型不可用，则通过最大化 preferred completions 的似然来初始化",
+    "reward_model_update": null,
+    "training_stages": "两阶段：1) 采样偏好对并标注构建离线数据集；2) 优化策略最小化 L_DPO 损失"
+  },
+
+  "regularization": {
+    "type": "KL divergence",
+    "coefficient": "β",
+    "reference_model": "π_ref (通常为 π_SFT)",
+    "description": "通过损失函数中的 log π_θ / π_ref 项隐式实现 KL 正则化，β 控制与参考策略的偏离程度",
+    "tested_values": [0.05, 0.1, 1, 5]
+  },
+
+  "efficiency": {
+    "value_model": false,
+    "critic_network": false,
+    "sampling_during_training": false,
+    "sample_count": null,
+    "batch_size": null,
+    "computational_advantage": "无需在训练循环中从 LM 采样，无需拟合显式奖励模型，无需复杂的 RL 超参数调优；计算开销显著低于 PPO"
+  },
+
+  "empirical_results": {
+    "in_domain": {
+      "controlled_sentiment_generation": {
+        "dataset": "IMDb",
+        "model": "GPT-2-large",
+        "finding": "DPO 在 reward-KL frontier 上严格优于 PPO 和 PPO-GT（使用真实奖励的 oracle），在所有 KL 水平下都达到最高奖励"
+      },
+      "summarization": {
+        "dataset": "Reddit TL;DR",
+        "model": "GPT-J (6B)",
+        "metrics": {
+          "DPO_win_rate_vs_reference": "约 61% (temperature=0)",
+          "PPO_win_rate_vs_reference": "约 57% (temperature=0)",
+          "DPO_vs_PPO_human_preference": "DPO 被偏好 58% 的时间"
+        },
+        "finding": "DPO 超过 PPO 最佳性能，且对采样温度更鲁棒"
+      },
+      "single_turn_dialogue": {
+        "dataset": "Anthropic Helpful and Harmless (HH)",
+        "model": "Pythia-2.8B",
+        "finding": "DPO 是唯一能够改进数据集中 preferred completions 的计算高效方法，性能与 Best of 128 相当或更好"
+      }
+    },
+    "out_of_domain": {
+      "task": "Summarization generalization",
+      "train_distribution": "Reddit TL;DR",
+      "test_distribution": "CNN/DailyMail",
+      "metrics": {
+        "DPO_win_rate_temp_0": 0.36,
+        "DPO_win_rate_temp_0.25": 0.31,
+        "PPO_win_rate_temp_0": 0.26,
+        "PPO_win_rate_temp_0.25": 0.23
+      },
+      "finding": "DPO 在分布外数据上持续显著优于 PPO"
+    }
+  },
+
+  "theoretical_insight": {
+    "core_theorem": "Theorem 1: 在温和假设下，所有与 Plackett-Luce（特别是 Bradley-Terry）模型一致的奖励类都可以用重参数化 r(x,y) = β log(π(y|x)/π_ref(y|x)) 表示",
+    "equivalence_class": "两个奖励函数若仅相差一个只依赖于 x 的函数，则属于同一等价类；同一等价类的奖励函数诱导相同的偏好分布和最优策略",
+    "partition_function": "DPO 重参数化选择的是使 partition function Z(x) = 1 的那个等价类成员，从而使最优策略解析可解",
+    "ppo_instability_analysis": "标准 actor-critic 算法（如 PPO）的不稳定性源于 partition function 估计困难；DPO 的重参数化自动消除了对 baseline/normalizer 的需求",
+    "implicit_reward_interpretation": "语言模型 π_θ 同时表示策略和隐式奖励模型"
+  }
+}

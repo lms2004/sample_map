@@ -1,0 +1,116 @@
+{
+	"URL": "https://arxiv.org/abs/1502.05477",
+  "method_name": "DAPO",
+  "full_name": "Decoupled Clip and Dynamic sAmpling Policy Optimization",
+  "category": "reinforcement_learning",
+
+  "base_algorithm": {
+    "derived_from": "GRPO (Group Relative Policy Optimization)",
+    "key_modification": "四项核心改进：(1) Clip-Higher - 解耦上下clip范围，ε_low=0.2, ε_high=0.28，提升低概率token的探索空间；(2) Dynamic Sampling - 动态过滤准确率为0或1的prompt组，保持批次内有效梯度数量一致；(3) Token-level Policy Gradient Loss - 按token级别归一化损失而非sample级别，避免长序列token贡献被稀释；(4) Overlong Reward Shaping - 对超长截断样本施加软惩罚，减少奖励噪声"
+  },
+
+  "data_source": {
+    "sampling_strategy": "online",
+    "dataset_name": "DAPO-Math-17k",
+    "dataset_description": "经过精心筛选和转换的数学数据集，包含17K个prompt，每个配对一个整数答案，便于rule-based验证"
+  },
+
+  "reward_function": {
+    "type": "rule-based",
+    "granularity": "outcome_supervision",
+    "description": "基于字符串归一化和匹配的规则验证器，正确答案得分+1，错误答案得分-1；超长样本采用Soft Overlong Punishment进行长度感知惩罚"
+  },
+
+  "gradient_coefficient": {
+    "advantage_estimation": "Group-relative normalization: A_i,t = (R_i - mean({R_i})) / std({R_i})",
+    "loss_normalization": "Token-level: 按所有样本的总token数归一化，即 1/Σ|o_i|，而非sample-level的先求每个样本平均再求样本平均",
+    "clip_mechanism": {
+      "ε_low": 0.2,
+      "ε_high": 0.28,
+      "description": "解耦的clip范围，保持下界不变以防止概率压缩到0，提高上界以允许低概率探索token获得更大的概率提升空间"
+    }
+  },
+
+  "training_paradigm": {
+    "iterative": true,
+    "reference_model_update": null,
+    "reference_model_usage": "不使用reference model，移除了KL散度惩罚项",
+    "reward_model_update": null,
+    "reward_model_usage": "使用rule-based验证器，无需训练或更新"
+  },
+
+  "regularization": {
+    "kl_divergence": {
+      "enabled": false,
+      "rationale": "在长CoT推理模型训练中，模型分布会显著偏离初始模型，KL约束不再必要"
+    },
+    "entropy_management": "通过Clip-Higher策略维持适当的熵水平，避免熵崩溃，同时通过Token-level Loss防止过度探索导致的熵过高"
+  },
+
+  "efficiency": {
+    "value_model": false,
+    "value_model_rationale": "继承GRPO设计，使用group-relative advantage估计代替value function",
+    "sampling": {
+      "prompt_batch_size": 512,
+      "responses_per_prompt": 16,
+      "mini_batch_size": 512,
+      "gradient_updates_per_rollout": 16
+    },
+    "generation": {
+      "max_length": 20480,
+      "expected_max_length": 16384,
+      "soft_punish_cache": 4096
+    },
+    "infrastructure": "基于verl框架，使用128张H20 GPU在Volcano Engine平台训练",
+    "dynamic_sampling_overhead": "虽然需要采样更多数据以过滤零梯度样本，但由于长尾样本主导生成时间，整体训练效率不受显著影响，甚至收敛更快"
+  },
+
+  "empirical_results": {
+    "in_domain": {
+      "benchmark": "AIME 2024",
+      "metric": "avg@32",
+      "performance": {
+        "DAPO_Qwen2.5_32B": "50%",
+        "baseline_naive_GRPO": "30%",
+        "DeepSeek_R1_Zero_Qwen_32B": "47%"
+      },
+      "training_efficiency": "相比DeepSeek-R1-Zero-Qwen-32B仅需50%的训练步数"
+    },
+    "out_of_domain": null,
+    "ablation_study": {
+      "naive_GRPO": 30,
+      "plus_Overlong_Filtering": 36,
+      "plus_Clip_Higher": 38,
+      "plus_Soft_Overlong_Punishment": 41,
+      "plus_Token_level_Loss": 42,
+      "plus_Dynamic_Sampling_full_DAPO": 50
+    }
+  },
+
+  "theoretical_insight": {
+    "entropy_collapse": "原始PPO/GRPO存在熵崩溃现象，通过提高ε_high为低概率token提供更大的概率提升空间，有效缓解此问题",
+    "gradient_diminishing": "当prompt组内所有输出准确率为0或1时，advantage为零导致梯度消失；Dynamic Sampling通过过滤这些样本保持有效梯度数量",
+    "length_rebalancing": "Sample-level loss导致长序列中的token贡献被稀释，无法有效抑制长序列中的低质量模式（如乱码、重复），Token-level loss解决此问题",
+    "reward_noise": "对截断样本直接施加惩罚会引入噪声，因为合理的推理过程可能仅因长度被惩罚；Soft Overlong Punishment通过长度感知的渐进惩罚减少此噪声",
+    "emergent_behavior": "训练过程中观察到反思和回溯等推理模式的涌现，这些模式在训练初期并不存在"
+  },
+
+  "hyperparameters": {
+    "optimizer": "AdamW",
+    "learning_rate": 1e-6,
+    "warmup_steps": 20,
+    "ε_low": 0.2,
+    "ε_high": 0.28,
+    "inference_temperature": 1.0,
+    "inference_top_p": 0.7,
+    "evaluation_repeats": 32
+  },
+
+  "open_source_components": {
+    "paper": "arXiv:2503.14476",
+    "code": "https://github.com/volcengine/verl (recipe/dapo)",
+    "dataset": "DAPO-Math-17k",
+    "model_weights": "公开发布",
+    "infrastructure": "基于verl框架"
+  }
+}

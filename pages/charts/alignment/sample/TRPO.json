@@ -1,0 +1,84 @@
+{
+	"URL": "https://arxiv.org/abs/1502.05477",
+  "method_name": "TRPO",
+  "full_name": "Trust Region Policy Optimization",
+  "category": "reinforcement_learning",
+
+  "base_algorithm": {
+    "derived_from": "natural policy gradient / conservative policy iteration (Kakade & Langford, 2002)",
+    "key_modification": "使用 KL 散度硬约束（trust region constraint）替代固定惩罚系数；将理论上的 D_KL_max 约束近似为实际可优化的 D̄_KL（平均 KL 散度）约束"
+  },
+
+  "data_source": {
+    "sampling_strategy": "online"
+  },
+
+  "reward_function": {
+    "type": "rule-based",
+    "granularity": "outcome_supervision"
+  },
+
+  "gradient_coefficient": {
+    "description": "通过 Fisher 信息矩阵（KL 散度的二阶近似）计算自然梯度方向 s ≈ A⁻¹g；步长 β = sqrt(2δ / s^T A s) 由信任域大小 δ 确定；使用线搜索确保满足非线性约束并改进目标函数"
+  },
+
+  "training_paradigm": {
+    "iterative": true,
+    "reference_model_update": "每次策略更新后，当前策略 π_θ 成为下一次迭代的参考策略 π_θ_old",
+    "reward_model_update": null
+  },
+
+  "regularization": {
+    "type": "KL divergence constraint",
+    "constraint_form": "D̄_KL(θ_old, θ) ≤ δ",
+    "coefficient_delta": "实验中使用 δ = 0.01",
+    "reference_model": "上一次迭代的策略 π_θ_old"
+  },
+
+  "efficiency": {
+    "value_model": false,
+    "advantage_estimation": "使用蒙特卡洛估计 Q 值，通过轨迹上的折扣奖励和计算",
+    "sampling_schemes": {
+      "single_path": "沿单条轨迹采样状态-动作对，model-free，可用于真实系统",
+      "vine": "从轨迹中选取状态子集，每个状态执行多个动作并 rollout，使用 common random numbers 降低方差，需要模拟器支持状态重置"
+    },
+    "conjugate_gradient_iterations": 10,
+    "fisher_matrix_subsampling": "使用 10% 数据计算 Fisher-vector product 以提升效率",
+    "policy_parameters": {
+      "swimmer": 364,
+      "hopper": 4806,
+      "walker": 8206,
+      "atari": 33500
+    }
+  },
+
+  "empirical_results": {
+    "in_domain": {
+      "continuous_control": {
+        "tasks": ["swimmer (10-dim state)", "hopper (12-dim state)", "walker (18-dim state)", "cart-pole"],
+        "performance": "TRPO（single path 和 vine）成功学习所有运动任务；优于 CEM、CMA；自然梯度在 hopper/walker 上失败（仅学会站立不会前进）",
+        "comparison": "max KL 约束学习稍慢但效果相近，验证了平均 KL 近似的有效性"
+      },
+      "atari_games": {
+        "tasks": ["B. Rider", "Breakout", "Enduro", "Pong", "Q*bert", "Seaquest", "S. Invaders"],
+        "architecture": "CNN with 2 conv layers (16 channels, stride 2) + 1 FC layer (20 units), 33500 parameters",
+        "performance": "在部分游戏上优于 Deep Q Learning（如 Enduro, Seaquest）；Q*bert 上 vine 方法达到 7732.5 分",
+        "training_time": "500 iterations, ~30 hours on 16-core computer"
+      }
+    },
+    "out_of_domain": null
+  },
+
+  "theoretical_insight": {
+    "monotonic_improvement_guarantee": "证明 η(π̃) ≥ L_π(π̃) - C·D_KL_max(π, π̃)，其中 C = 4εγ/(1-γ)²，ε = max_{s,a}|A_π(s,a)|",
+    "surrogate_objective": "L_π(π̃) = η(π) + Σ_s ρ_π(s) Σ_a π̃(a|s) A_π(s,a)，使用旧策略的状态访问分布 ρ_π 而非 ρ_π̃",
+    "first_order_match": "L_π 与真实目标 η 在当前策略处一阶匹配：∇L = ∇η at θ = θ_old",
+    "mm_algorithm_perspective": "TRPO 是一种 minorization-maximization (MM) 算法，M_i(π) = L_πi(π) - C·D_KL_max(πi, π) 是 η 的下界代理函数",
+    "connection_to_prior_methods": {
+      "natural_policy_gradient": "对 L 线性近似 + 对 D̄_KL 二次近似的特例，使用固定步长而非约束",
+      "standard_policy_gradient": "使用 ℓ2 约束/惩罚的特例",
+      "policy_iteration": "无约束最大化 L 的特例"
+    },
+    "practical_vs_theory_gap": "理论系数 C 导致步长过小；D_KL_max 约束难以优化，改用 D̄_KL；忽略优势函数估计误差"
+  }
+}
