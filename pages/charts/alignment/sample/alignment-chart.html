@@ -428,7 +428,8 @@
         <div id="loading-msg">正在加载数据...</div>
     </div>
 
-    <!-- 形状筛选器 -->
+    <!-- 形状筛选器（已禁用领域过滤，显示所有数据） -->
+    <!-- 
     <div class="shape-filter">
         <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
             <input type="checkbox" id="filter-general" checked>
@@ -442,11 +443,11 @@
         </label>
     </div>
 
-    <!-- 静态辅助图例 -->
     <div class="legend-info">
         <div><span>●</span> 通用对话 (General Chat)</div>
         <div><span>▲</span> 数学/推理 (Reasoning)</div>
     </div>
+    -->
 
     <!-- 数据统计 -->
     <div id="data-stats"></div>
@@ -478,40 +479,90 @@
             jsonUrl: `${dataFile}?v=${Date.now()}`,
             // 从sample目录加载所有JSON文件
             sampleDir: './',
-            colors: {
-                // 主要基于 method_type 字段
-                'RLHF': '#e3b341',
-                'RLVR': '#58a6ff',
-                'RLAIF': '#f85149',
-                'Direct Alignment': '#3fb950',
-                'SFT / Distillation': '#a371f7',
-                'PRM': '#ffb6c1',
-                // 如果没有 method_type，回退到 category
-                'reinforcement_learning': '#e3b341',
-                'preference_optimization': '#3fb950',
-                'Unknown': '#888888'
-            },
+            // 预定义的颜色池，用于动态分配（选择差异明显的颜色）
+            colorPool: [
+                '#FF6B6B', // 珊瑚红 - 明亮红色
+                '#4ECDC4', // 青绿色 - 明亮青色
+                '#45B7D1', // 天蓝色 - 明亮蓝色
+                '#FFA07A', // 浅鲑鱼色 - 橙粉色
+                '#98D8C8', // 薄荷绿 - 浅绿色
+                '#F7DC6F', // 金黄色 - 明亮黄色
+                '#BB8FCE', // 淡紫色 - 柔和紫色
+                '#85C1E2', // 浅蓝色 - 柔和蓝色
+                '#F8B739', // 橙黄色 - 明亮橙色
+                '#52BE80', // 翠绿色 - 明亮绿色
+                '#EC7063', // 粉红色 - 柔和红色
+                '#5DADE2', // 亮蓝色 - 明亮蓝色
+                '#F4D03F', // 柠檬黄 - 明亮黄色
+                '#AF7AC5', // 紫罗兰 - 柔和紫色
+                '#48C9B0', // 绿松石 - 明亮青色
+                '#E74C3C', // 深红色 - 鲜明红色
+                '#3498DB', // 深蓝色 - 鲜明蓝色
+                '#2ECC71', // 深绿色 - 鲜明绿色
+                '#F39C12', // 深橙色 - 鲜明橙色
+                '#9B59B6'  // 深紫色 - 鲜明紫色
+            ],
             shapes: {
                 'general': 'circle',
                 'reasoning': 'triangle'
             }
         };
-
-        // 根据URL参数设置默认勾选状态
-        const filterGeneral = document.getElementById('filter-general');
-        const filterReasoning = document.getElementById('filter-reasoning');
         
-        if (domainParam === 'general') {
-            filterGeneral.checked = true;
-            filterReasoning.checked = false;
-        } else if (domainParam === 'reasoning') {
-            filterGeneral.checked = false;
-            filterReasoning.checked = true;
-        } else {
-            // 默认都勾选
-            filterGeneral.checked = true;
-            filterReasoning.checked = true;
+        // 动态颜色映射，根据实际数据中的cluster值分配
+        let dynamicColorMap = {};
+        let colorAllocationInitialized = false;
+        
+        // 改进的字符串哈希函数（使用更好的哈希算法）
+        function hashString(str) {
+            let hash = 5381; // 使用更大的初始值
+            for (let i = 0; i < str.length; i++) {
+                hash = ((hash << 5) + hash) + str.charCodeAt(i);
+                hash = hash & hash; // 转换为32位整数
+            }
+            return Math.abs(hash);
         }
+        
+        // 初始化颜色分配：收集所有唯一的cluster并按哈希排序，确保每个得到不同颜色
+        function initializeColorAllocation(uniqueClusters) {
+            if (colorAllocationInitialized) return;
+            
+            // 按哈希值排序，确保每次运行都得到相同的顺序
+            const sortedClusters = uniqueClusters.slice().sort((a, b) => {
+                const hashA = hashString(a);
+                const hashB = hashString(b);
+                return hashA - hashB;
+            });
+            
+            // 为每个cluster按顺序分配颜色（确保每个都不同）
+            sortedClusters.forEach((cluster, index) => {
+                const colorIndex = index % CONFIG.colorPool.length;
+                dynamicColorMap[cluster] = CONFIG.colorPool[colorIndex];
+            });
+            
+            colorAllocationInitialized = true;
+        }
+        
+        // 为cluster分配颜色的函数（确保不同cluster得到不同颜色）
+        function getColorForCluster(cluster, allClusters) {
+            // 如果还没有初始化，先初始化
+            if (!colorAllocationInitialized && allClusters) {
+                const uniqueClusters = [...new Set(allClusters)];
+                initializeColorAllocation(uniqueClusters);
+            }
+            
+            // 如果该cluster还没有分配颜色，使用哈希值分配（作为后备）
+            if (!dynamicColorMap[cluster]) {
+                const hash = hashString(cluster);
+                const colorIndex = hash % CONFIG.colorPool.length;
+                dynamicColorMap[cluster] = CONFIG.colorPool[colorIndex];
+            }
+            
+            return dynamicColorMap[cluster];
+        }
+
+        // 不再使用领域过滤，所有数据都显示
+        // const filterGeneral = document.getElementById('filter-general');
+        // const filterReasoning = document.getElementById('filter-reasoning');
 
         // --- 主题配置 ---
         const THEME_STYLES = {
@@ -613,31 +664,18 @@
             return verificationByLevel;
         }
 
-        // 根据形状筛选过滤数据
+        // 根据形状筛选过滤数据（不再区分领域，显示所有数据）
         function filterDataByShape(data) {
-            const showGeneral = filterGeneral.checked;
-            const showReasoning = filterReasoning.checked;
-            
-            if (showGeneral && showReasoning) {
-                return data; // 显示所有数据
-            } else if (showGeneral) {
-                return data.filter(item => item.domain === 'general');
-            } else if (showReasoning) {
-                return data.filter(item => item.domain === 'reasoning');
-            } else {
-                return []; // 都不勾选时返回空数组
-            }
+            // 不进行领域过滤，直接返回所有数据
+            return data;
         }
 
         // 更新图表数据
         function updateChart() {
             filteredData = filterDataByShape(allData);
             
+            // 完全基于数据动态创建系列组
             const seriesGroups = {};
-            
-            Object.keys(CONFIG.colors).forEach(groupName => {
-                seriesGroups[groupName] = [];
-            });
 
             const totalCount = allData.length;
             let usedCount = 0;
@@ -653,15 +691,23 @@
                 const dateValue = item.date;
                 const valueNum = typeof item.value === 'number' ? item.value : Number(item.value);
 
-                if (!dateValue || Number.isNaN(new Date(dateValue).getTime()) || Number.isNaN(valueNum)) {
-                    skippedCount++;
-                    console.warn('跳过无效数据点:', item);
-                    return;
+                // 更宽松的验证：如果日期无效，使用默认日期；如果值无效，使用默认值
+                let validDate = dateValue;
+                let validValue = valueNum;
+                
+                if (!dateValue || Number.isNaN(new Date(dateValue).getTime())) {
+                    console.warn(`数据点 ${item.name} 的日期无效: ${dateValue}，使用默认日期`);
+                    validDate = new Date().toISOString().split('T')[0];
+                }
+                
+                if (Number.isNaN(valueNum) || valueNum <= 0) {
+                    console.warn(`数据点 ${item.name} 的值无效: ${valueNum}，使用默认值5`);
+                    validValue = 5;
                 }
 
                 seriesGroups[cluster].push({
                     name: item.name,
-                    value: [dateValue, valueNum],
+                    value: [validDate, validValue],
                     symbol: CONFIG.shapes[item.domain] || 'circle',
                     symbolSize: item.domain === 'reasoning' ? 18 : 14,
                     customData: item 
@@ -674,29 +720,30 @@
                 dataStats.textContent = `当前展示 ${usedCount} / ${totalCount} 个数据点`;
             }
 
-            const seriesList = Object.keys(seriesGroups).map(groupName => {
-                // 获取颜色，支持多种可能的键名
-                let color = CONFIG.colors[groupName];
-                if (!color) {
-                    // 尝试匹配部分键名
-                    const matchedKey = Object.keys(CONFIG.colors).find(key => 
-                        groupName.includes(key) || key.includes(groupName)
-                    );
-                    color = matchedKey ? CONFIG.colors[matchedKey] : '#888';
-                }
-                
-                return {
-                    name: groupName,
-                    type: 'scatter',
-                    itemStyle: { 
-                        color: color
-                    },
-                    data: seriesGroups[groupName],
-                    markPoint: {
-                        data: [{type: 'max', name: 'Max'}]
-                    }
-                };
-            });
+            // 收集所有cluster名称，用于初始化颜色分配
+            const allClusters = Object.keys(seriesGroups);
+            
+            // 初始化颜色分配（确保每个cluster得到不同颜色）
+            if (!colorAllocationInitialized) {
+                initializeColorAllocation(allClusters);
+            }
+            
+            // 动态生成系列列表，完全基于数据中的cluster值
+            const seriesList = allClusters
+                .sort() // 按名称排序，保持一致性
+                .map(groupName => {
+                    return {
+                        name: groupName,
+                        type: 'scatter',
+                        itemStyle: { 
+                            color: getColorForCluster(groupName, allClusters)
+                        },
+                        data: seriesGroups[groupName],
+                        markPoint: {
+                            data: [{type: 'max', name: 'Max'}]
+                        }
+                    };
+                });
 
             seriesListCache = seriesList;
 
@@ -714,21 +761,18 @@
                         const info = params.data.customData;
                         if (!info) return '';
                         
+                        const originalData = info.originalData || {};
+                        const methodTypeDesc = originalData.method_type_description || '';
+                        
                         return `
-                            <div style="font-size: 16px; font-weight: bold; color: ${params.color}; margin-bottom: 5px;">
+                            <div style="font-size: 16px; font-weight: bold; color: ${params.color}; margin-bottom: 8px;">
                                 ${info.name}
                             </div>
-                            <div style="font-size: 12px; color: #8b949e; margin-bottom: 10px;">
-                                📅 ${info.date} &nbsp;|&nbsp; 🏷️ ${info.cluster}
+                            ${methodTypeDesc ? `
+                            <div style="font-size: 13px; color: #c9d1d9; line-height: 1.5;">
+                                ${methodTypeDesc}
                             </div>
-                            <div style="border-top: 1px solid #30363d; padding-top: 8px; font-size: 13px;">
-                                <b style="color:#fff">📌 核心条件 (Representative Conditions):</b><br>
-                                <span style="color: #d2a8ff;">${info.conditions}</span>
-                            </div>
-                            <div style="margin-top: 8px; font-size: 13px;">
-                                <b style="color:#fff">📊 实验效果 (Experimental Results):</b><br>
-                                <span style="color: #7ee787;">${info.result}</span>
-                            </div>
+                            ` : ''}
                         `;
                     }
                 },
@@ -826,25 +870,31 @@
                 // 可以根据category做映射，但优先保持method_type为空时的处理
             }
             
-            // 确定领域（从category或其他字段推断）
-            let domain = 'general';
-            if (jsonData.category === 'reasoning' || 
-                (jsonData.method_type && jsonData.method_type.includes('RLVR')) ||
-                (jsonData.full_name && jsonData.full_name.toLowerCase().includes('reasoning'))) {
-                domain = 'reasoning';
-            }
+            // 不再区分领域，所有数据统一处理
+            // 保留domain字段用于显示，但不用于过滤
+            let domain = 'general'; // 默认值，不影响显示
             
             // 计算value（基于empirical_results或其他指标）
             let value = 5; // 默认值
-            if (jsonData.empirical_results && jsonData.empirical_results.in_domain) {
-                const inDomain = jsonData.empirical_results.in_domain;
-                // 尝试提取性能指标
-                if (typeof inDomain === 'object') {
-                    const keys = Object.keys(inDomain);
-                    if (keys.length > 0) {
-                        value = Math.min(10, 5 + keys.length * 0.5);
+            if (jsonData.empirical_results) {
+                if (jsonData.empirical_results.in_domain) {
+                    const inDomain = jsonData.empirical_results.in_domain;
+                    // 尝试提取性能指标
+                    if (typeof inDomain === 'object' && inDomain !== null) {
+                        const keys = Object.keys(inDomain);
+                        if (keys.length > 0) {
+                            value = Math.min(10, 5 + keys.length * 0.5);
+                        }
                     }
                 }
+                // 如果有out_of_domain数据，也增加value
+                if (jsonData.empirical_results.out_of_domain) {
+                    value = Math.min(10, value + 1);
+                }
+            }
+            // 确保value是有效数字
+            if (isNaN(value) || value <= 0) {
+                value = 5;
             }
             
             // 构建conditions（核心条件）
@@ -964,6 +1014,8 @@
                 console.info(
                     `对齐图谱: 从 ${validFiles.length} 个JSON文件读取 ${allData.length} 条记录, 当前显示 ${filteredData.length} 条。`
                 );
+                console.info('所有数据点:', allData.map(d => ({ name: d.name, domain: d.domain, cluster: d.cluster, date: d.date, value: d.value })));
+                console.info('过滤后数据点:', filteredData.map(d => ({ name: d.name, domain: d.domain, cluster: d.cluster })));
                 
                 // 添加点击事件监听
                 myChart.on('click', function(params) {
@@ -1733,9 +1785,9 @@
             _showDetailModalInternal(fullItem);
         };
 
-        // 绑定形状筛选器的change事件
-        filterGeneral.addEventListener('change', updateChart);
-        filterReasoning.addEventListener('change', updateChart);
+        // 不再使用领域过滤，移除事件监听
+        // filterGeneral.addEventListener('change', updateChart);
+        // filterReasoning.addEventListener('change', updateChart);
 
         // --- 启动 ---
         initChart();

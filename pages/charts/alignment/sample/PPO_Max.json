@@ -8,7 +8,7 @@
   "method_type_description": "使用人类偏好标注训练的奖励模型(reward model)提供奖励信号，通过PPO算法优化策略模型以对齐人类偏好，属于经典RLHF流程的工程优化版本",
 
   "base_algorithm": {
-    "derived_from": "PPO (Proximal Policy Optimization)",
+    "derived_from": "PPO",
     "key_modification": "集成多种稳定训练策略：reward normalization and clipping、token-level KL-penalty 约束策略优化、critic model 使用 reward model 初始化并预训练、global gradient clipping、小尺寸 experience buffer、可选的 pre-training loss (PPO-ptx)"
   },
 

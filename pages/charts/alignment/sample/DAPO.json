@@ -8,7 +8,7 @@
   "method_type_description": "使用基于规则的验证器（rule-based verifier）作为奖励信号，通过数学答案的正确性判定提供确定性奖励，属于可验证奖励的强化学习范式",
 
   "base_algorithm": {
-    "derived_from": "GRPO (Group Relative Policy Optimization)",
+    "derived_from": "GRPO",
     "key_modification": "四项核心改进：(1) Clip-Higher - 解耦上下clip范围，ε_low=0.2, ε_high=0.28，提升低概率token的探索空间；(2) Dynamic Sampling - 动态过滤准确率为0或1的prompt组，保持批次内有效梯度数量一致；(3) Token-level Policy Gradient Loss - 按token级别归一化损失而非sample级别，避免长序列token贡献被稀释；(4) Overlong Reward Shaping - 对超长截断样本施加软惩罚，减少奖励噪声"
   },
 

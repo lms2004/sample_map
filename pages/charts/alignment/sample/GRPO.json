@@ -8,7 +8,7 @@
   "method_type_description": "使用可程序化验证的奖励信号（如数学题答案正确性）进行训练，奖励函数基于规则判定而非人类偏好标注，适用于有明确正确答案的任务",
 
   "base_algorithm": {
-    "derived_from": "PPO (Proximal Policy Optimization)",
+    "derived_from": "PPO",
     "key_modification": "移除 critic/value model，使用组内多个采样输出的平均奖励作为 baseline 估计 advantage；KL 散度正则化直接加入损失函数而非奖励函数中"
   },
 
