@@ -1,8 +1,11 @@
 {
-	"URL": "https://arxiv.org/abs/1502.05477",
+  "URL": "https://arxiv.org/abs/1502.05477",
   "method_name": "DAPO",
   "full_name": "Decoupled Clip and Dynamic sAmpling Policy Optimization",
   "category": "reinforcement_learning",
+  "method_type": "RLVR",
+  "method_type_full": "Reinforcement Learning from Verifiable Rewards",
+  "method_type_description": "使用基于规则的验证器（rule-based verifier）作为奖励信号，通过数学答案的正确性判定提供确定性奖励，属于可验证奖励的强化学习范式",
 
   "base_algorithm": {
     "derived_from": "GRPO (Group Relative Policy Optimization)",

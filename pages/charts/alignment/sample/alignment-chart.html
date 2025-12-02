@@ -1,0 +1,1713 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大模型对齐技术演进图谱 (Data Driven)</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <link rel="stylesheet" href="../../../styles/map-theme.css">
+    <style>
+        .chart-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        #chart-container {
+            width: 100%;
+            height: 650px;
+            background: #161b22;
+            border-radius: 12px;
+            border: 1px solid #30363d;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+
+        #loading-msg {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            color: #58a6ff;
+            font-size: 18px;
+            display: none;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .legend-info {
+            margin-top: 20px;
+            display: flex;
+            gap: 20px;
+            font-size: 13px;
+            color: #8b949e;
+            background: #161b22;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid #30363d;
+        }
+        .legend-info span { font-weight: bold; margin-right: 5px; color: #fff; }
+
+        .shape-filter {
+            margin-top: 20px;
+            display: flex;
+            gap: 20px;
+            font-size: 13px;
+            color: #8b949e;
+            background: #161b22;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid #30363d;
+            justify-content: center;
+        }
+
+        .shape-filter label {
+            color: #8b949e;
+        }
+
+        .shape-filter input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .shape-filter label:hover {
+            color: #fff;
+        }
+
+        body.light-theme .shape-filter {
+            background: #ffffff;
+            border-color: #d0d7de;
+            color: #57606a;
+        }
+
+        body.light-theme .shape-filter label {
+            color: #57606a;
+        }
+
+        body.light-theme .shape-filter label:hover {
+            color: #24292f;
+        }
+
+        #data-stats {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #8b949e;
+            text-align: center;
+        }
+
+        body.light-theme #chart-container {
+            background: #ffffff;
+            border-color: #d0d7de;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        body.light-theme .legend-info {
+            background: #ffffff;
+            border-color: #d0d7de;
+            color: #57606a;
+        }
+        body.light-theme .legend-info span {
+            color: #24292f;
+        }
+        body.light-theme #data-stats {
+            color: #57606a;
+        }
+        body.light-theme #loading-msg {
+            color: #0969da;
+        }
+
+        /* 详情模态框样式 */
+        .detail-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .detail-modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        body.light-theme .modal-content {
+            background: white;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e1e4e8;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #24292f;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #8b949e;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: #f3f4f6;
+            color: #24292f;
+        }
+
+        .back-btn {
+            background: #f6f8fa;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            color: #24292f;
+            transition: all 0.2s;
+            margin-right: 10px;
+        }
+
+        .back-btn:hover {
+            background: #f3f4f6;
+            border-color: #8b949e;
+        }
+
+        .detail-section {
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #24292f;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-content {
+            background: #f6f8fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #0969da;
+        }
+
+        .verification-levels {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .verification-level-item {
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f6f8fa;
+        }
+
+        .verification-badge {
+            padding: 12px 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+
+        .verification-badge-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .verification-expand-icon {
+            font-size: 14px;
+            transition: transform 0.3s;
+        }
+
+        .verification-badge.expanded .verification-expand-icon {
+            transform: rotate(90deg);
+        }
+
+        .verification-badge.level-a {
+            background: #dafbe1;
+            color: #1a7f37;
+            border-color: #2da44e;
+        }
+
+        .verification-badge.level-b {
+            background: #fff8c5;
+            color: #9a6700;
+            border-color: #bf8700;
+        }
+
+        .verification-badge.level-c {
+            background: #ffebe9;
+            color: #cf222e;
+            border-color: #da3633;
+        }
+
+        .verification-badge:hover {
+            background: rgba(0,0,0,0.05);
+        }
+
+        .verification-badge.level-a:hover {
+            background: #c8f4d3;
+        }
+
+        .verification-badge.level-b:hover {
+            background: #fff3b5;
+        }
+
+        .verification-badge.level-c:hover {
+            background: #ffe0dd;
+        }
+
+        .verification-experiments-list {
+            display: none;
+            padding: 15px;
+            background: white;
+            border-top: 1px solid #d0d7de;
+        }
+
+        .verification-experiments-list.active {
+            display: block;
+        }
+
+        .verification-count {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-left: 8px;
+        }
+
+        .similar-points-list {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #d0d7de;
+        }
+
+        .similar-points-list.active {
+            display: block;
+        }
+
+        .similar-point-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #f6f8fa;
+            border-radius: 6px;
+            border-left: 3px solid #0969da;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .similar-point-item:hover {
+            background: #e1e4e8;
+            transform: translateX(4px);
+        }
+
+        .similar-point-name {
+            font-weight: 600;
+            color: #24292f;
+            margin-bottom: 4px;
+        }
+
+        .similar-point-desc {
+            font-size: 13px;
+            color: #57606a;
+        }
+
+        .link-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #0969da;
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            background: #f6f8fa;
+            transition: all 0.2s;
+        }
+
+        .link-item:hover {
+            background: #e1e4e8;
+            text-decoration: underline;
+        }
+
+        .comment-section {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .comment-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #d0d7de;
+        }
+
+        .comment-author {
+            font-weight: 600;
+            color: #24292f;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .comment-text {
+            font-size: 13px;
+            color: #57606a;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 面包屑导航 -->
+    <div class="breadcrumb">
+        <a href="../../../home.html">首页</a>
+        <span> / </span>
+        <a href="../../engineering.html">工科</a>
+        <span> / </span>
+        <a href="../../computer.html">计算机</a>
+        <span> / </span>
+        <a href="../../llm-algorithm.html">大模型算法</a>
+        <span> / </span>
+        <span class="current">后训练对齐</span>
+    </div>
+
+    <!-- 标题区 -->
+    <h1>大模型对齐技术演进图谱</h1>
+    <div class="subtitle">
+        基于科研价值筛选的核心样本点展示<br>
+        X轴：时间 | Y轴：方法效率与影响力
+    </div>
+
+    <!-- 主题切换 -->
+    <div class="theme-toggle">
+        <button id="theme-toggle-btn">切换为浅色背景</button>
+    </div>
+
+    <!-- 图表容器 -->
+    <div class="chart-wrapper">
+        <div id="chart-container"></div>
+        <div id="loading-msg">正在加载数据...</div>
+    </div>
+
+    <!-- 形状筛选器 -->
+    <div class="shape-filter">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
+            <input type="checkbox" id="filter-general" checked>
+            <span>●</span>
+            <span>通用对话 (General Chat)</span>
+        </label>
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
+            <input type="checkbox" id="filter-reasoning" checked>
+            <span>▲</span>
+            <span>数学/推理 (Reasoning)</span>
+        </label>
+    </div>
+
+    <!-- 静态辅助图例 -->
+    <div class="legend-info">
+        <div><span>●</span> 通用对话 (General Chat)</div>
+        <div><span>▲</span> 数学/推理 (Reasoning)</div>
+    </div>
+
+    <!-- 数据统计 -->
+    <div id="data-stats"></div>
+
+    <!-- 详情模态框 -->
+    <div id="detail-modal" class="detail-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="back-btn" id="back-btn" style="display: none;">← 返回</button>
+                <h2 class="modal-title" id="modal-title">详情</h2>
+                <button class="close-btn" id="close-modal">&times;</button>
+            </div>
+            <div id="modal-body">
+                <!-- 内容将通过 JS 动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 配置常量 ---
+        // 支持通过 URL 参数指定数据文件，例如: ?data=data.json
+        // 如果没有指定，默认使用当前目录的 data.json
+        const urlParams = new URLSearchParams(window.location.search);
+        const dataFile = urlParams.get('data') || 'data.json';
+        const domainParam = urlParams.get('domain') || ''; // 获取领域参数
+        
+        const CONFIG = {
+            // 数据文件路径（可通过 URL 参数 ?data=xxx.json 指定）
+            jsonUrl: `${dataFile}?v=${Date.now()}`,
+            // 从sample目录加载所有JSON文件
+            sampleDir: './',
+            colors: {
+                'RLHF': '#e3b341',
+                'RLVR': '#58a6ff',
+                'RLAIF': '#f85149',
+                'Direct Alignment': '#3fb950',
+                'SFT / Distillation': '#a371f7',
+                'PRM': '#ffb6c1',
+                'reinforcement_learning': '#e3b341',
+                'preference_optimization': '#3fb950'
+            },
+            shapes: {
+                'general': 'circle',
+                'reasoning': 'triangle'
+            }
+        };
+
+        // 根据URL参数设置默认勾选状态
+        const filterGeneral = document.getElementById('filter-general');
+        const filterReasoning = document.getElementById('filter-reasoning');
+        
+        if (domainParam === 'general') {
+            filterGeneral.checked = true;
+            filterReasoning.checked = false;
+        } else if (domainParam === 'reasoning') {
+            filterGeneral.checked = false;
+            filterReasoning.checked = true;
+        } else {
+            // 默认都勾选
+            filterGeneral.checked = true;
+            filterReasoning.checked = true;
+        }
+
+        // --- 主题配置 ---
+        const THEME_STYLES = {
+            dark: {
+                text: '#c9d1d9',
+                muted: '#8b949e',
+                border: '#30363d',
+                grid: '#30363d',
+                tooltipBg: 'rgba(22, 27, 34, 0.95)'
+            },
+            light: {
+                text: '#24292f',
+                muted: '#57606a',
+                border: '#d0d7de',
+                grid: '#d0d7de',
+                tooltipBg: 'rgba(255, 255, 255, 0.98)'
+            }
+        };
+
+        let currentTheme = 'light';
+        let lastOption = null;
+        let allData = []; // 存储所有数据用于查找相似点
+        let filteredData = []; // 存储过滤后的数据
+        let verificationData = {}; // 存储验证实验数据
+        let commentsData = {}; // 存储评论数据
+        let seriesListCache = null; // 缓存系列数据
+
+        // --- 初始化 ECharts ---
+        const chartDom = document.getElementById('chart-container');
+        const loadingMsg = document.getElementById('loading-msg');
+        const dataStats = document.getElementById('data-stats');
+        const themeToggleBtn = document.getElementById('theme-toggle-btn');
+        const myChart = echarts.init(chartDom, 'light');
+        const detailModal = document.getElementById('detail-modal');
+        const closeModalBtn = document.getElementById('close-modal');
+        const backBtn = document.getElementById('back-btn');
+        let originalItem = null; // 存储原始数据点，用于返回
+        
+        // 默认应用浅色主题
+        document.body.classList.add('light-theme');
+        if (themeToggleBtn) {
+            themeToggleBtn.textContent = '切换为夜间背景';
+        }
+
+        // 生成模拟的验证数据和相似点
+        function generateVerificationData(item) {
+            const levels = ['A', 'B', 'C'];
+            const randomLevel = levels[Math.floor(Math.random() * levels.length)];
+            const counts = {
+                'A': Math.floor(Math.random() * 50) + 20,
+                'B': Math.floor(Math.random() * 30) + 10,
+                'C': Math.floor(Math.random() * 20) + 5
+            };
+            
+            return {
+                level: randomLevel,
+                counts: counts,
+                total: counts[randomLevel]
+            };
+        }
+
+        // 查找基于相同实验条件复现的验证实验数据点
+        function findSimilarPoints(currentItem) {
+            let modelVerificationData = [];
+            
+            // 尝试多种可能的 key 格式来匹配 verificationData
+            if (currentItem.id && verificationData[currentItem.id]) {
+                modelVerificationData = verificationData[currentItem.id];
+            } else {
+                // 尝试通过 name 匹配（转换为小写，替换空格为下划线，移除特殊字符）
+                const nameKey = currentItem.name.toLowerCase()
+                    .replace(/\s+/g, '_')
+                    .replace(/[^a-z0-9_]/g, '');
+                
+                if (verificationData[nameKey]) {
+                    modelVerificationData = verificationData[nameKey];
+                } else {
+                    // 尝试直接使用 id（如果存在）
+                    const idKey = currentItem.id ? currentItem.id.toLowerCase() : '';
+                    if (idKey && verificationData[idKey]) {
+                        modelVerificationData = verificationData[idKey];
+                    }
+                }
+            }
+            
+            // 基于相同的实验条件（conditions）过滤验证实验
+            const filteredByConditions = modelVerificationData.filter(item =>
+                item.conditions === currentItem.conditions
+            );
+            
+            // 按验证级别分组
+            const verificationByLevel = { A: [], B: [], C: [] };
+            filteredByConditions.forEach(vItem => {
+                if (vItem.verificationLevel && verificationByLevel[vItem.verificationLevel]) {
+                    verificationByLevel[vItem.verificationLevel].push(vItem);
+                }
+            });
+            
+            return verificationByLevel;
+        }
+
+        // 根据形状筛选过滤数据
+        function filterDataByShape(data) {
+            const showGeneral = filterGeneral.checked;
+            const showReasoning = filterReasoning.checked;
+            
+            if (showGeneral && showReasoning) {
+                return data; // 显示所有数据
+            } else if (showGeneral) {
+                return data.filter(item => item.domain === 'general');
+            } else if (showReasoning) {
+                return data.filter(item => item.domain === 'reasoning');
+            } else {
+                return []; // 都不勾选时返回空数组
+            }
+        }
+
+        // 更新图表数据
+        function updateChart() {
+            filteredData = filterDataByShape(allData);
+            
+            const seriesGroups = {};
+            
+            Object.keys(CONFIG.colors).forEach(groupName => {
+                seriesGroups[groupName] = [];
+            });
+
+            const totalCount = allData.length;
+            let usedCount = 0;
+            let skippedCount = 0;
+
+            filteredData.forEach(item => {
+                if (!seriesGroups[item.cluster]) {
+                    seriesGroups[item.cluster] = [];
+                }
+
+                const dateValue = item.date;
+                const valueNum = typeof item.value === 'number' ? item.value : Number(item.value);
+
+                if (!dateValue || Number.isNaN(new Date(dateValue).getTime()) || Number.isNaN(valueNum)) {
+                    skippedCount++;
+                    console.warn('跳过无效数据点:', item);
+                    return;
+                }
+
+                seriesGroups[item.cluster].push({
+                    name: item.name,
+                    value: [dateValue, valueNum],
+                    symbol: CONFIG.shapes[item.domain] || 'circle',
+                    symbolSize: item.domain === 'reasoning' ? 18 : 14,
+                    customData: item 
+                });
+
+                usedCount++;
+            });
+
+            if (dataStats) {
+                dataStats.textContent = `当前展示 ${usedCount} / ${totalCount} 个数据点`;
+            }
+
+            const seriesList = Object.keys(seriesGroups).map(groupName => {
+                // 获取颜色，支持多种可能的键名
+                let color = CONFIG.colors[groupName];
+                if (!color) {
+                    // 尝试匹配部分键名
+                    const matchedKey = Object.keys(CONFIG.colors).find(key => 
+                        groupName.includes(key) || key.includes(groupName)
+                    );
+                    color = matchedKey ? CONFIG.colors[matchedKey] : '#888';
+                }
+                
+                return {
+                    name: groupName,
+                    type: 'scatter',
+                    itemStyle: { 
+                        color: color
+                    },
+                    data: seriesGroups[groupName],
+                    markPoint: {
+                        data: [{type: 'max', name: 'Max'}]
+                    }
+                };
+            });
+
+            seriesListCache = seriesList;
+
+            const theme = THEME_STYLES[currentTheme];
+
+            const option = {
+                backgroundColor: 'transparent',
+                tooltip: {
+                    trigger: 'item',
+                    backgroundColor: theme.tooltipBg,
+                    borderColor: theme.border,
+                    textStyle: { color: theme.text },
+                    padding: 15,
+                    formatter: function (params) {
+                        const info = params.data.customData;
+                        if (!info) return '';
+                        
+                        return `
+                            <div style="font-size: 16px; font-weight: bold; color: ${params.color}; margin-bottom: 5px;">
+                                ${info.name}
+                            </div>
+                            <div style="font-size: 12px; color: #8b949e; margin-bottom: 10px;">
+                                📅 ${info.date} &nbsp;|&nbsp; 🏷️ ${info.cluster}
+                            </div>
+                            <div style="border-top: 1px solid #30363d; padding-top: 8px; font-size: 13px;">
+                                <b style="color:#fff">📌 核心条件 (Representative Conditions):</b><br>
+                                <span style="color: #d2a8ff;">${info.conditions}</span>
+                            </div>
+                            <div style="margin-top: 8px; font-size: 13px;">
+                                <b style="color:#fff">📊 实验效果 (Experimental Results):</b><br>
+                                <span style="color: #7ee787;">${info.result}</span>
+                            </div>
+                        `;
+                    }
+                },
+                toolbox: {
+                    right: 20,
+                    top: 15,
+                    feature: {
+                        dataZoom: { yAxisIndex: 'none' },
+                        restore: {},
+                        saveAsImage: {}
+                    },
+                    iconStyle: {
+                        borderColor: theme.muted
+                    }
+                },
+                legend: {
+                    data: Object.keys(seriesGroups),
+                    bottom: 10,
+                    textStyle: { color: theme.muted }
+                },
+                grid: { top: '10%', left: '5%', right: '10%', bottom: '15%', containLabel: true },
+                dataZoom: [
+                    {
+                        type: 'inside',
+                        xAxisIndex: 0,
+                        filterMode: 'none'
+                    },
+                    {
+                        type: 'inside',
+                        yAxisIndex: 0,
+                        filterMode: 'none'
+                    }
+                ],
+                xAxis: {
+                    type: 'time',
+                    name: '时间 (Time)',
+                    nameTextStyle: { color: theme.muted },
+                    axisLabel: { 
+                        color: theme.muted, 
+                        formatter: function(value) {
+                            const date = new Date(value);
+                            return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0');
+                        }
+                    },
+                    splitLine: { show: true, lineStyle: { color: theme.grid, type: 'dashed' } }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '性能评分',
+                    nameTextStyle: { color: theme.muted },
+                    axisLabel: { show: false },
+                    splitLine: { show: true, lineStyle: { color: theme.grid, opacity: 0.3 } },
+                    min: 2, max: 11
+                },
+                series: seriesList
+            };
+
+            lastOption = option;
+            myChart.setOption(option, true);
+        }
+
+        // 转换新JSON格式到图表格式
+        function transformNewJsonFormat(jsonData, fileName) {
+            // 从文件名提取日期（如果有的话），否则使用当前日期
+            const dateMatch = fileName.match(/(\d{4})[-_](\d{2})[-_](\d{2})/);
+            const defaultDate = dateMatch 
+                ? `${dateMatch[1]}-${dateMatch[2]}-${dateMatch[3]}`
+                : new Date().toISOString().split('T')[0];
+            
+            // 确定分组（优先使用method_type，否则使用category）
+            const cluster = jsonData.method_type || jsonData.category || 'Unknown';
+            
+            // 确定领域（从category或其他字段推断）
+            let domain = 'general';
+            if (jsonData.category === 'reasoning' || 
+                (jsonData.method_type && jsonData.method_type.includes('RLVR')) ||
+                (jsonData.full_name && jsonData.full_name.toLowerCase().includes('reasoning'))) {
+                domain = 'reasoning';
+            }
+            
+            // 计算value（基于empirical_results或其他指标）
+            let value = 5; // 默认值
+            if (jsonData.empirical_results && jsonData.empirical_results.in_domain) {
+                const inDomain = jsonData.empirical_results.in_domain;
+                // 尝试提取性能指标
+                if (typeof inDomain === 'object') {
+                    const keys = Object.keys(inDomain);
+                    if (keys.length > 0) {
+                        value = Math.min(10, 5 + keys.length * 0.5);
+                    }
+                }
+            }
+            
+            // 构建conditions（核心条件）
+            const conditions = [
+                jsonData.data_source?.sampling_strategy ? `采样策略: ${jsonData.data_source.sampling_strategy}` : '',
+                jsonData.reward_function?.type ? `奖励类型: ${jsonData.reward_function.type}` : '',
+                jsonData.reward_function?.granularity ? `奖励粒度: ${jsonData.reward_function.granularity}` : '',
+                jsonData.training_paradigm?.iterative !== undefined ? `迭代训练: ${jsonData.training_paradigm.iterative ? '是' : '否'}` : ''
+            ].filter(Boolean).join(' | ') || '未指定';
+            
+            // 构建result（实验效果）
+            const resultParts = [];
+            if (jsonData.empirical_results?.in_domain) {
+                const inDomain = jsonData.empirical_results.in_domain;
+                if (typeof inDomain === 'object') {
+                    Object.entries(inDomain).forEach(([key, value]) => {
+                        if (typeof value === 'object' && value !== null) {
+                            resultParts.push(`${key}: ${JSON.stringify(value)}`);
+                        } else {
+                            resultParts.push(`${key}: ${value}`);
+                        }
+                    });
+                }
+            }
+            const result = resultParts.length > 0 ? resultParts.join('; ') : '实验结果待补充';
+            
+            return {
+                id: jsonData.method_name?.toLowerCase() || fileName.replace('.json', ''),
+                name: jsonData.method_name || jsonData.full_name || 'Unknown',
+                full_name: jsonData.full_name || jsonData.method_name || 'Unknown',
+                date: defaultDate,
+                cluster: cluster,
+                domain: domain,
+                value: value,
+                conditions: conditions,
+                result: result,
+                // 保存原始数据以便详情显示
+                originalData: jsonData,
+                // 兼容旧格式的字段
+                source: jsonData.URL || '',
+                paperUrl: jsonData.URL || '',
+                codeUrl: jsonData.open_source_components?.code || '',
+                githubUrl: jsonData.open_source_components?.code || ''
+            };
+        }
+
+        // --- 核心逻辑函数 ---
+        async function initChart() {
+            try {
+                if (loadingMsg) {
+                    loadingMsg.style.display = 'block';
+                }
+
+                // 加载sample目录下的所有JSON文件
+                const jsonFiles = [
+                    'PPO.json',
+                    'PPO_Max.json',
+                    'DPO.json',
+                    'GRPO.json',
+                    'GSPO.json',
+                    'DAPO.json',
+                    'TRPO.json'
+                ];
+                
+                const loadPromises = jsonFiles.map(async (fileName) => {
+                    try {
+                        const response = await fetch(`${CONFIG.sampleDir}${fileName}?v=${Date.now()}`);
+                        if (!response.ok) {
+                            console.warn(`无法加载 ${fileName}`);
+                            return null;
+                        }
+                        const data = await response.json();
+                        return { data, fileName };
+                    } catch (error) {
+                        console.warn(`加载 ${fileName} 失败:`, error);
+                        return null;
+                    }
+                });
+                
+                const loadedFiles = await Promise.all(loadPromises);
+                const validFiles = loadedFiles.filter(f => f !== null);
+                
+                // 转换数据格式
+                allData = validFiles.map(({ data, fileName }) => 
+                    transformNewJsonFormat(data, fileName)
+                );
+                
+                // 加载验证实验数据（从同目录加载）
+                try {
+                    const verificationResponse = await fetch(`verification-data.json?v=${Date.now()}`);
+                    if (verificationResponse.ok) {
+                        verificationData = await verificationResponse.json();
+                    }
+                } catch (e) {
+                    console.warn('验证实验数据加载失败，将使用模拟数据:', e);
+                }
+                
+                // 加载评论数据（从同目录加载）
+                try {
+                    const commentsResponse = await fetch(`comments-data.json?v=${Date.now()}`);
+                    if (commentsResponse.ok) {
+                        commentsData = await commentsResponse.json();
+                    }
+                } catch (e) {
+                    console.warn('评论数据加载失败:', e);
+                }
+
+                // 使用过滤函数更新图表
+                updateChart();
+                
+                console.info(
+                    `对齐图谱: 从 ${validFiles.length} 个JSON文件读取 ${allData.length} 条记录, 当前显示 ${filteredData.length} 条。`
+                );
+                
+                // 添加点击事件监听
+                myChart.on('click', function(params) {
+                    if (params.data && params.data.customData) {
+                        _showDetailModalInternal(params.data.customData);
+                    }
+                });
+                
+                if (loadingMsg) {
+                    loadingMsg.style.display = 'none';
+                }
+
+            } catch (error) {
+                console.error('数据加载错误:', error);
+                let errorMsg = '数据加载失败: ' + error.message;
+                if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
+                    errorMsg += '<br><br>提示：请使用本地服务器运行（如 Python: python -m http.server 或 VS Code Live Server）';
+                }
+                if (loadingMsg) {
+                    loadingMsg.innerHTML = errorMsg;
+                    loadingMsg.style.color = '#f85149';
+                    loadingMsg.style.display = 'block';
+                }
+            }
+        }
+
+        // --- 主题切换逻辑 ---
+        function applyThemeToChart() {
+            if (!lastOption) return;
+            const theme = THEME_STYLES[currentTheme];
+            myChart.setOption({
+                tooltip: {
+                    backgroundColor: theme.tooltipBg,
+                    borderColor: theme.border,
+                    textStyle: { color: theme.text }
+                },
+                legend: {
+                    textStyle: { color: theme.muted }
+                },
+                toolbox: {
+                    iconStyle: { borderColor: theme.muted }
+                },
+                xAxis: {
+                    nameTextStyle: { color: theme.muted },
+                    axisLabel: { color: theme.muted },
+                    splitLine: { lineStyle: { color: theme.grid, type: 'dashed' } }
+                },
+                yAxis: {
+                    nameTextStyle: { color: theme.muted },
+                    splitLine: { lineStyle: { color: theme.grid, opacity: 0.3 } }
+                }
+            });
+        }
+
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', () => {
+                currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                document.body.classList.toggle('light-theme', currentTheme === 'light');
+                themeToggleBtn.textContent = currentTheme === 'dark' ? '切换为浅色背景' : '切换为夜间背景';
+                applyThemeToChart();
+            });
+        }
+
+        // 填充默认实验条件
+        function fillDefaultExperimentDetails(item) {
+            if (!item.experimentDetails) {
+                item.experimentDetails = {};
+            }
+            // 清理 undefined 值
+            const cleanDetails = {};
+            Object.keys(item.experimentDetails).forEach(key => {
+                if (item.experimentDetails[key] !== undefined && item.experimentDetails[key] !== 'undefined') {
+                    cleanDetails[key] = item.experimentDetails[key];
+                }
+            });
+            
+            const defaults = {
+                hardware: cleanDetails.hardware || "GPU集群",
+                gpuCount: cleanDetails.gpuCount || "未说明",
+                gpuModel: cleanDetails.gpuModel || "未说明",
+                memory: cleanDetails.memory || "未说明",
+                trainingTime: cleanDetails.trainingTime || cleanDetails.time || "未说明",
+                totalHours: cleanDetails.totalHours || "未说明",
+                epochs: cleanDetails.epochs || "未说明",
+                iterations: cleanDetails.iterations || "未说明",
+                dataset: cleanDetails.dataset || cleanDetails.dataSize || "未说明",
+                dataSize: cleanDetails.dataSize || "未说明",
+                samples: cleanDetails.samples || "未说明",
+                tokens: cleanDetails.tokens || "未说明",
+                hyperparameters: cleanDetails.hyperparameters || "未说明",
+                learningRate: cleanDetails.learningRate || "未说明",
+                batchSize: cleanDetails.batchSize || "未说明",
+                modelSize: cleanDetails.modelSize || "未说明",
+                trainingLog: cleanDetails.trainingLog || null,
+                cost: cleanDetails.cost || null
+            };
+            return Object.assign({}, defaults, cleanDetails);
+        }
+
+        // 填充默认指标
+        function fillDefaultMetrics(item) {
+            if (!item.metrics) {
+                item.metrics = {};
+            }
+            // 清理 undefined 值
+            const cleanMetrics = {};
+            Object.keys(item.metrics).forEach(key => {
+                if (item.metrics[key] !== undefined && item.metrics[key] !== 'undefined') {
+                    cleanMetrics[key] = item.metrics[key];
+                }
+            });
+            
+            const defaults = {
+                benchmarks: cleanMetrics.benchmarks || {},
+                latency: cleanMetrics.latency || "未说明",
+                throughput: cleanMetrics.throughput || "未说明",
+                tokensPerDollar: cleanMetrics.tokensPerDollar || null,
+                reasoningSteps: cleanMetrics.reasoningSteps || null,
+                performance: cleanMetrics.performance || null,
+                accuracy: cleanMetrics.accuracy || null,
+                efficiency: cleanMetrics.efficiency || null,
+                additionalMetrics: cleanMetrics.additionalMetrics || null
+            };
+            return Object.assign({}, defaults, cleanMetrics);
+        }
+
+        // 显示详情模态框（内部函数）
+        async function _showDetailModalInternal(item, isVerificationExperiment = false) {
+            // 如果不是验证实验，保存为原始数据点
+            if (!isVerificationExperiment) {
+                originalItem = item;
+                if (backBtn) backBtn.style.display = 'none';
+            } else {
+                // 如果是验证实验，显示返回按钮
+                if (backBtn) backBtn.style.display = 'block';
+            }
+            
+            // 填充默认值
+            const enrichedItem = {
+                ...item,
+                experimentDetails: fillDefaultExperimentDetails(item),
+                metrics: fillDefaultMetrics(item)
+            };
+            
+            // 查找验证数据（只有非验证实验才查找，避免嵌套）
+            const verificationByLevel = isVerificationExperiment ? { A: [], B: [], C: [] } : findSimilarPoints(enrichedItem);
+            
+            // 计算各级别的数量（完全基于实际数据，不使用随机数）
+            const verification = {
+                counts: {
+                    A: verificationByLevel.A.length,
+                    B: verificationByLevel.B.length,
+                    C: verificationByLevel.C.length
+                },
+                total: verificationByLevel.A.length + verificationByLevel.B.length + verificationByLevel.C.length
+            };
+            
+            // 使用 enrichedItem 替代 item
+            const displayItem = enrichedItem;
+            
+            document.getElementById('modal-title').textContent = displayItem.name;
+            
+            // 如果是验证实验，不显示分级验证部分
+            const showVerificationSection = !isVerificationExperiment;
+            
+            const originalData = displayItem.originalData || {};
+            
+            const modalBody = document.getElementById('modal-body');
+            modalBody.innerHTML = `
+                <div class="detail-section">
+                    <div class="section-title">📄 基本信息</div>
+                    <div class="section-content">
+                        <p><strong>方法简称:</strong> ${originalData.method_name || displayItem.name}</p>
+                        <p><strong>方法全称:</strong> ${originalData.full_name || displayItem.full_name}</p>
+                        <p><strong>方法类别:</strong> ${originalData.category || '未指定'}</p>
+                        ${originalData.method_type ? `<p><strong>方法类型:</strong> ${originalData.method_type} (${originalData.method_type_full || ''})</p>` : ''}
+                        ${originalData.method_type_description ? `<p><strong>类型描述:</strong> ${originalData.method_type_description}</p>` : ''}
+                        <p><strong>日期:</strong> ${displayItem.date}</p>
+                        <p><strong>分类:</strong> ${displayItem.cluster}</p>
+                        <p><strong>领域:</strong> ${displayItem.domain === 'general' ? '通用对话' : '数学/推理'}</p>
+                        <p><strong>科研价值:</strong> ${displayItem.value}</p>
+                    </div>
+                </div>
+
+                ${originalData.base_algorithm ? `
+                <div class="detail-section">
+                    <div class="section-title">🔬 基础算法</div>
+                    <div class="section-content">
+                        ${originalData.base_algorithm.derived_from ? `<p><strong>源自方法:</strong> ${originalData.base_algorithm.derived_from}</p>` : ''}
+                        ${originalData.base_algorithm.key_modification ? `<p><strong>核心改动点:</strong> ${originalData.base_algorithm.key_modification}</p>` : ''}
+                    </div>
+                </div>
+                ` : ''}
+
+                ${originalData.data_source ? `
+                <div class="detail-section">
+                    <div class="section-title">📥 数据来源</div>
+                    <div class="section-content">
+                        ${originalData.data_source.sampling_strategy ? `<p><strong>采样方式:</strong> ${originalData.data_source.sampling_strategy}</p>` : ''}
+                        ${originalData.data_source.dataset_name ? `<p><strong>数据集名称:</strong> ${originalData.data_source.dataset_name}</p>` : ''}
+                        ${originalData.data_source.dataset_description ? `<p><strong>数据集描述:</strong> ${originalData.data_source.dataset_description}</p>` : ''}
+                        ${originalData.data_source.description ? `<p><strong>描述:</strong> ${originalData.data_source.description}</p>` : ''}
+                        ${originalData.data_source.preference_data ? `<p><strong>偏好数据:</strong> ${originalData.data_source.preference_data}</p>` : ''}
+                    </div>
+                </div>
+                ` : ''}
+
+                ${originalData.reward_function ? `
+                <div class="detail-section">
+                    <div class="section-title">🎯 奖励函数</div>
+                    <div class="section-content">
+                        ${originalData.reward_function.type ? `<p><strong>奖励类型:</strong> ${Array.isArray(originalData.reward_function.type) ? originalData.reward_function.type.join(', ') : originalData.reward_function.type}</p>` : ''}
+                        ${originalData.reward_function.granularity ? `<p><strong>奖励粒度:</strong> ${Array.isArray(originalData.reward_function.granularity) ? originalData.reward_function.granularity.join(', ') : originalData.reward_function.granularity}</p>` : ''}
+                        ${originalData.reward_function.description ? `<p><strong>描述:</strong> ${originalData.reward_function.description}</p>` : ''}
+                        ${originalData.reward_function.verification_method ? `<p><strong>验证方法:</strong> ${typeof originalData.reward_function.verification_method === 'object' ? JSON.stringify(originalData.reward_function.verification_method, null, 2) : originalData.reward_function.verification_method}</p>` : ''}
+                        ${originalData.reward_function.reward_model_training ? `<p><strong>奖励模型训练:</strong> ${originalData.reward_function.reward_model_training}</p>` : ''}
+                    </div>
+                </div>
+                ` : ''}
+
+                ${originalData.gradient_coefficient ? `
+                <div class="detail-section">
+                    <div class="section-title">📈 梯度系数</div>
+                    <div class="section-content">
+                        ${typeof originalData.gradient_coefficient === 'object' ? 
+                            Object.entries(originalData.gradient_coefficient).map(([key, value]) => {
+                                if (value === null || value === undefined) return '';
+                                if (typeof value === 'object') {
+                                    return `<p><strong>${key}:</strong> ${JSON.stringify(value, null, 2)}</p>`;
+                                }
+                                return `<p><strong>${key}:</strong> ${value}</p>`;
+                            }).join('') 
+                            : `<p>${originalData.gradient_coefficient}</p>`
+                        }
+                    </div>
+                </div>
+                ` : ''}
+
+                ${originalData.training_paradigm ? `
+                <div class="detail-section">
+                    <div class="section-title">🔄 训练范式</div>
+                    <div class="section-content">
+                        ${originalData.training_paradigm.iterative !== undefined ? `<p><strong>是否迭代:</strong> ${originalData.training_paradigm.iterative ? '是' : '否'}</p>` : ''}
+                        ${originalData.training_paradigm.reference_model_update ? `<p><strong>参考模型更新:</strong> ${originalData.training_paradigm.reference_model_update}</p>` : ''}
+                        ${originalData.training_paradigm.reference_model_usage ? `<p><strong>参考模型使用:</strong> ${originalData.training_paradigm.reference_model_usage}</p>` : ''}
+                        ${originalData.training_paradigm.reward_model_update ? `<p><strong>奖励模型更新:</strong> ${originalData.training_paradigm.reward_model_update}</p>` : ''}
+                        ${originalData.training_paradigm.reward_model_usage ? `<p><strong>奖励模型使用:</strong> ${originalData.training_paradigm.reward_model_usage}</p>` : ''}
+                        ${originalData.training_paradigm.description ? `<p><strong>描述:</strong> ${originalData.training_paradigm.description}</p>` : ''}
+                        ${originalData.training_paradigm.stages ? `<p><strong>训练阶段:</strong> ${Array.isArray(originalData.training_paradigm.stages) ? originalData.training_paradigm.stages.join('; ') : originalData.training_paradigm.stages}</p>` : ''}
+                        ${originalData.training_paradigm.training_stages ? `<p><strong>训练阶段:</strong> ${originalData.training_paradigm.training_stages}</p>` : ''}
+                    </div>
+                </div>
+                ` : ''}
+
+                ${originalData.regularization ? `
+                <div class="detail-section">
+                    <div class="section-title">⚖️ 正则化</div>
+                    <div class="section-content">
+                        ${typeof originalData.regularization === 'object' ? 
+                            Object.entries(originalData.regularization).map(([key, value]) => {
+                                if (value === null || value === undefined) return '';
+                                if (typeof value === 'object') {
+                                    return `<p><strong>${key}:</strong> ${JSON.stringify(value, null, 2)}</p>`;
+                                }
+                                return `<p><strong>${key}:</strong> ${value}</p>`;
+                            }).join('') 
+                            : `<p>${originalData.regularization}</p>`
+                        }
+                    </div>
+                </div>
+                ` : ''}
+
+                ${originalData.efficiency ? `
+                <div class="detail-section">
+                    <div class="section-title">⚡ 效率</div>
+                    <div class="section-content">
+                        ${typeof originalData.efficiency === 'object' ? 
+                            Object.entries(originalData.efficiency).map(([key, value]) => {
+                                if (value === null || value === undefined) return '';
+                                if (typeof value === 'object') {
+                                    return `<p><strong>${key}:</strong> ${JSON.stringify(value, null, 2)}</p>`;
+                                }
+                                return `<p><strong>${key}:</strong> ${value}</p>`;
+                            }).join('') 
+                            : `<p>${originalData.efficiency}</p>`
+                        }
+                    </div>
+                </div>
+                ` : ''}
+
+                <div class="detail-section">
+                    <div class="section-title">📌 核心条件</div>
+                    <div class="section-content">
+                        <p>${displayItem.conditions}</p>
+                    </div>
+                </div>
+
+                ${originalData.empirical_results ? `
+                <div class="detail-section">
+                    <div class="section-title">📊 实验结果</div>
+                    <div class="section-content">
+                        ${originalData.empirical_results.in_domain ? `
+                            <div style="margin-bottom: 15px;">
+                                <div style="font-weight: 600; margin-bottom: 8px; color: #0969da;">领域内数据:</div>
+                                <div style="padding: 12px; background: #f6f8fa; border-radius: 6px;">
+                                    ${typeof originalData.empirical_results.in_domain === 'object' ? 
+                                        Object.entries(originalData.empirical_results.in_domain).map(([key, value]) => {
+                                            if (typeof value === 'object' && value !== null) {
+                                                return `<p><strong>${key}:</strong> ${JSON.stringify(value, null, 2)}</p>`;
+                                            }
+                                            return `<p><strong>${key}:</strong> ${value}</p>`;
+                                        }).join('') 
+                                        : `<p>${originalData.empirical_results.in_domain}</p>`
+                                    }
+                                </div>
+                            </div>
+                        ` : ''}
+                        ${originalData.empirical_results.out_of_domain ? `
+                            <div style="margin-bottom: 15px;">
+                                <div style="font-weight: 600; margin-bottom: 8px; color: #1a7f37;">领域外数据:</div>
+                                <div style="padding: 12px; background: #f6f8fa; border-radius: 6px;">
+                                    ${typeof originalData.empirical_results.out_of_domain === 'object' ? 
+                                        Object.entries(originalData.empirical_results.out_of_domain).map(([key, value]) => {
+                                            if (typeof value === 'object' && value !== null) {
+                                                return `<p><strong>${key}:</strong> ${JSON.stringify(value, null, 2)}</p>`;
+                                            }
+                                            return `<p><strong>${key}:</strong> ${value}</p>`;
+                                        }).join('') 
+                                        : `<p>${originalData.empirical_results.out_of_domain}</p>`
+                                    }
+                                </div>
+                            </div>
+                        ` : ''}
+                        ${originalData.empirical_results.ablation_study ? `
+                            <div style="margin-bottom: 15px;">
+                                <div style="font-weight: 600; margin-bottom: 8px; color: #8250df;">消融实验:</div>
+                                <div style="padding: 12px; background: #f6f8fa; border-radius: 6px;">
+                                    ${typeof originalData.empirical_results.ablation_study === 'object' ? 
+                                        JSON.stringify(originalData.empirical_results.ablation_study, null, 2) 
+                                        : `<p>${originalData.empirical_results.ablation_study}</p>`
+                                    }
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+                ` : `
+                <div class="detail-section">
+                    <div class="section-title">📊 实验效果</div>
+                    <div class="section-content">
+                        <p>${displayItem.result}</p>
+                    </div>
+                </div>
+                `}
+
+                ${originalData.theoretical_insight ? `
+                <div class="detail-section">
+                    <div class="section-title">🧠 理论解释</div>
+                    <div class="section-content">
+                        ${typeof originalData.theoretical_insight === 'object' ? 
+                            Object.entries(originalData.theoretical_insight).map(([key, value]) => {
+                                if (value === null || value === undefined) return '';
+                                if (Array.isArray(value)) {
+                                    return `<p><strong>${key}:</strong><ul>${value.map(v => `<li>${v}</li>`).join('')}</ul></p>`;
+                                }
+                                if (typeof value === 'object') {
+                                    return `<p><strong>${key}:</strong> ${JSON.stringify(value, null, 2)}</p>`;
+                                }
+                                return `<p><strong>${key}:</strong> ${value}</p>`;
+                            }).join('') 
+                            : `<p>${originalData.theoretical_insight}</p>`
+                        }
+                    </div>
+                </div>
+                ` : ''}
+
+                <div class="detail-section">
+                    <div class="section-title">⚙️ 详细实验条件（资源消耗）</div>
+                    <div class="section-content">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 10px;">
+                            <div style="padding: 12px; background: #f6f8fa; border-radius: 6px; border-left: 3px solid #0969da;">
+                                <div style="font-weight: 600; color: #0969da; margin-bottom: 6px;">🖥️ 硬件资源</div>
+                                <div style="font-size: 13px; color: #57606a;">
+                                    ${displayItem.experimentDetails.hardware || displayItem.experimentDetails.gpu || '未说明'}
+                                    ${displayItem.experimentDetails.gpuCount && displayItem.experimentDetails.gpuCount !== '未说明' ? ` (${displayItem.experimentDetails.gpuCount}块)` : ''}
+                                    ${displayItem.experimentDetails.gpuModel && displayItem.experimentDetails.gpuModel !== '未说明' ? ` - ${displayItem.experimentDetails.gpuModel}` : ''}
+                                    ${displayItem.experimentDetails.memory && displayItem.experimentDetails.memory !== '未说明' ? `<br>内存: ${displayItem.experimentDetails.memory}` : ''}
+                                    ${displayItem.experimentDetails.cpu ? `<br>CPU: ${displayItem.experimentDetails.cpu}` : ''}
+                                </div>
+                            </div>
+                            <div style="padding: 12px; background: #f6f8fa; border-radius: 6px; border-left: 3px solid #1a7f37;">
+                                <div style="font-weight: 600; color: #1a7f37; margin-bottom: 6px;">⏱️ 时间消耗</div>
+                                <div style="font-size: 13px; color: #57606a;">
+                                    ${displayItem.experimentDetails.trainingTime || displayItem.experimentDetails.time || '未说明'}
+                                    ${displayItem.experimentDetails.totalHours && displayItem.experimentDetails.totalHours !== '未说明' ? `<br>总训练时长: ${displayItem.experimentDetails.totalHours} 小时` : ''}
+                                    ${displayItem.experimentDetails.epochs && displayItem.experimentDetails.epochs !== '未说明' ? `<br>训练轮数: ${displayItem.experimentDetails.epochs}` : ''}
+                                    ${displayItem.experimentDetails.iterations && displayItem.experimentDetails.iterations !== '未说明' ? `<br>迭代次数: ${displayItem.experimentDetails.iterations}` : ''}
+                                </div>
+                            </div>
+                            <div style="padding: 12px; background: #f6f8fa; border-radius: 6px; border-left: 3px solid #cf222e;">
+                                <div style="font-weight: 600; color: #cf222e; margin-bottom: 6px;">📦 数据量</div>
+                                <div style="font-size: 13px; color: #57606a;">
+                                    ${displayItem.experimentDetails.dataset || displayItem.experimentDetails.dataSize || '未说明'}
+                                    ${displayItem.experimentDetails.dataSize && displayItem.experimentDetails.dataSize !== '未说明' ? `<br>数据集大小: ${displayItem.experimentDetails.dataSize}` : ''}
+                                    ${displayItem.experimentDetails.samples && displayItem.experimentDetails.samples !== '未说明' ? `<br>样本数量: ${displayItem.experimentDetails.samples}` : ''}
+                                    ${displayItem.experimentDetails.tokens && displayItem.experimentDetails.tokens !== '未说明' ? `<br>Token数: ${displayItem.experimentDetails.tokens}` : ''}
+                                </div>
+                            </div>
+                            <div style="padding: 12px; background: #f6f8fa; border-radius: 6px; border-left: 3px solid #8250df;">
+                                <div style="font-weight: 600; color: #8250df; margin-bottom: 6px;">🔧 超参数配置</div>
+                                <div style="font-size: 13px; color: #57606a;">
+                                    ${displayItem.experimentDetails.hyperparameters || '未说明'}
+                                    ${displayItem.experimentDetails.learningRate && displayItem.experimentDetails.learningRate !== '未说明' ? `<br>学习率: ${displayItem.experimentDetails.learningRate}` : ''}
+                                    ${displayItem.experimentDetails.batchSize && displayItem.experimentDetails.batchSize !== '未说明' ? `<br>批次大小: ${displayItem.experimentDetails.batchSize}` : ''}
+                                    ${displayItem.experimentDetails.modelSize && displayItem.experimentDetails.modelSize !== '未说明' ? `<br>模型大小: ${displayItem.experimentDetails.modelSize}` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        ${displayItem.experimentDetails.trainingLog ? `
+                            <div style="margin-top: 15px; padding: 12px; background: #fff8e1; border-radius: 6px; border-left: 3px solid #f59e0b;">
+                                <div style="font-weight: 600; color: #f59e0b; margin-bottom: 6px;">📋 训练日志</div>
+                                <div style="font-size: 13px; color: #57606a;">${displayItem.experimentDetails.trainingLog}</div>
+                            </div>
+                        ` : ''}
+                        ${displayItem.experimentDetails.cost ? `
+                            <div style="margin-top: 15px; padding: 12px; background: #f0f9ff; border-radius: 6px; border-left: 3px solid #0284c7;">
+                                <div style="font-weight: 600; color: #0284c7; margin-bottom: 6px;">💰 计算成本</div>
+                                <div style="font-size: 13px; color: #57606a;">${displayItem.experimentDetails.cost}</div>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="section-title">📈 详细实验指标（Benchmark结果）</div>
+                    <div class="section-content">
+                        ${Object.keys(displayItem.metrics.benchmarks || {}).length > 0 ? `
+                            <div style="margin-top: 10px;">
+                                <div style="font-weight: 600; margin-bottom: 12px; color: #24292f;">核心Benchmark结果:</div>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
+                                    ${Object.entries(displayItem.metrics.benchmarks).map(([benchmark, value]) => `
+                                        <div style="padding: 12px; background: linear-gradient(135deg, #f6f8fa 0%, #ffffff 100%); border-radius: 6px; border: 1px solid #d0d7de;">
+                                            <div style="font-weight: 600; color: #0969da; margin-bottom: 6px; font-size: 14px;">${benchmark}</div>
+                                            <div style="font-size: 18px; font-weight: 700; color: #24292f;">${typeof value === 'object' ? JSON.stringify(value, null, 2) : value}</div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+                        <div style="margin-top: 15px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                            ${displayItem.metrics.latency && displayItem.metrics.latency !== '未说明' ? `
+                                <div style="padding: 12px; background: #f6f8fa; border-radius: 6px;">
+                                    <div style="font-weight: 600; color: #8250df; margin-bottom: 6px; font-size: 13px;">⏱️ 延迟</div>
+                                    <div style="font-size: 14px; color: #57606a;">${displayItem.metrics.latency}</div>
+                                </div>
+                            ` : ''}
+                            ${displayItem.metrics.throughput && displayItem.metrics.throughput !== '未说明' ? `
+                                <div style="padding: 12px; background: #f6f8fa; border-radius: 6px;">
+                                    <div style="font-weight: 600; color: #f59e0b; margin-bottom: 6px; font-size: 13px;">📊 吞吐量</div>
+                                    <div style="font-size: 14px; color: #57606a;">${displayItem.metrics.throughput}</div>
+                                </div>
+                            ` : ''}
+                            ${displayItem.metrics.tokensPerDollar ? `
+                                <div style="padding: 12px; background: #f6f8fa; border-radius: 6px;">
+                                    <div style="font-weight: 600; color: #1a7f37; margin-bottom: 6px; font-size: 13px;">💰 性价比</div>
+                                    <div style="font-size: 14px; color: #57606a;">${displayItem.metrics.tokensPerDollar}</div>
+                                </div>
+                            ` : ''}
+                            ${displayItem.metrics.reasoningSteps ? `
+                                <div style="padding: 12px; background: #f6f8fa; border-radius: 6px;">
+                                    <div style="font-weight: 600; color: #0969da; margin-bottom: 6px; font-size: 13px;">🧠 推理步数</div>
+                                    <div style="font-size: 14px; color: #57606a;">${displayItem.metrics.reasoningSteps}</div>
+                                </div>
+                            ` : ''}
+                            ${displayItem.metrics.performance && displayItem.metrics.performance !== 'undefined' ? `
+                                <div style="padding: 12px; background: #f6f8fa; border-radius: 6px;">
+                                    <div style="font-weight: 600; color: #1a7f37; margin-bottom: 6px; font-size: 13px;">⚡ 性能</div>
+                                    <div style="font-size: 14px; color: #57606a;">${displayItem.metrics.performance}</div>
+                                </div>
+                            ` : ''}
+                            ${displayItem.metrics.accuracy && displayItem.metrics.accuracy !== 'undefined' ? `
+                                <div style="padding: 12px; background: #f6f8fa; border-radius: 6px;">
+                                    <div style="font-weight: 600; color: #0969da; margin-bottom: 6px; font-size: 13px;">🎯 准确性</div>
+                                    <div style="font-size: 14px; color: #57606a;">${displayItem.metrics.accuracy}</div>
+                                </div>
+                            ` : ''}
+                            ${displayItem.metrics.efficiency && displayItem.metrics.efficiency !== 'undefined' ? `
+                                <div style="padding: 12px; background: #f6f8fa; border-radius: 6px;">
+                                    <div style="font-weight: 600; color: #f59e0b; margin-bottom: 6px; font-size: 13px;">🚀 效率</div>
+                                    <div style="font-size: 14px; color: #57606a;">${displayItem.metrics.efficiency}</div>
+                                </div>
+                            ` : ''}
+                        </div>
+                        ${displayItem.metrics.additionalMetrics ? `
+                            <div style="margin-top: 15px; padding: 12px; background: #fff8e1; border-radius: 6px; border-left: 3px solid #f59e0b;">
+                                <div style="font-weight: 600; color: #f59e0b; margin-bottom: 8px;">其他指标</div>
+                                <div style="font-size: 13px; color: #57606a; line-height: 1.8;">
+                                    ${typeof displayItem.metrics.additionalMetrics === 'object' 
+                                        ? Object.entries(displayItem.metrics.additionalMetrics).map(([key, value]) => 
+                                            `<strong>${key}:</strong> ${typeof value === 'object' ? JSON.stringify(value) : value}<br>`
+                                        ).join('')
+                                        : displayItem.metrics.additionalMetrics}
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="section-title">💬 评论区</div>
+                    <div class="section-content">
+                        ${(() => {
+                            const itemComments = commentsData[displayItem.id] || {};
+                            const status = itemComments.reproductionStatus || '已验证';
+                            const comments = itemComments.comments || [];
+                            
+                            return `
+                                <div style="margin-bottom: 15px; font-size: 13px; color: #57606a;">
+                                    <span style="color: #1a7f37; font-weight: 600;">✓ 实验复现状态: ${status}</span>
+                                </div>
+                                <div class="comment-section">
+                                    ${comments.length > 0 ? comments.map(comment => `
+                                        <div class="comment-item">
+                                            <div class="comment-author">@${comment.author || '匿名用户'}</div>
+                                            <div class="comment-text">${comment.text || comment.content || ''}</div>
+                                            ${comment.date ? `<div style="font-size: 11px; color: #8b949e; margin-top: 4px;">${comment.date}</div>` : ''}
+                                        </div>
+                                    `).join('') : `
+                                        <div style="padding: 20px; text-align: center; color: #8b949e;">
+                                            <p>暂无评论</p>
+                                            <p style="font-size: 12px; margin-top: 8px;">欢迎添加评论和反馈</p>
+                                        </div>
+                                    `}
+                                </div>
+                            `;
+                        })()}
+                    </div>
+                </div>
+
+                ${showVerificationSection ? `
+                <div class="detail-section">
+                    <div class="section-title">🎯 分级验证</div>
+                    <div class="section-content">
+                        <p style="margin-bottom: 10px; font-size: 13px; color: #57606a;">
+                            <strong>验证级别说明：</strong><br>
+                            • <strong>A级</strong>：完整实验（包含完整代码和实验细节）<br>
+                            • <strong>B级</strong>：实验代码不全<br>
+                            • <strong>C级</strong>：仅公布实验指标
+                        </p>
+                        <p style="margin-bottom: 15px; margin-top: 15px;">点击等级展开查看基于相同实验条件的复现实验列表：</p>
+                        <div class="verification-levels">
+                            <div class="verification-level-item">
+                                <div class="verification-badge level-a" data-level="A" data-count="${verification.counts.A}">
+                                    <div class="verification-badge-header">
+                                        <span class="verification-expand-icon">▶</span>
+                                        <span>A级验证</span>
+                                        <span class="verification-count">(${verification.counts.A}人)</span>
+                                    </div>
+                                </div>
+                                <div class="verification-experiments-list" id="level-a-experiments"></div>
+                            </div>
+                            <div class="verification-level-item">
+                                <div class="verification-badge level-b" data-level="B" data-count="${verification.counts.B}">
+                                    <div class="verification-badge-header">
+                                        <span class="verification-expand-icon">▶</span>
+                                        <span>B级验证</span>
+                                        <span class="verification-count">(${verification.counts.B}人)</span>
+                                    </div>
+                                </div>
+                                <div class="verification-experiments-list" id="level-b-experiments"></div>
+                            </div>
+                            <div class="verification-level-item">
+                                <div class="verification-badge level-c" data-level="C" data-count="${verification.counts.C}">
+                                    <div class="verification-badge-header">
+                                        <span class="verification-expand-icon">▶</span>
+                                        <span>C级验证</span>
+                                        <span class="verification-count">(${verification.counts.C}人)</span>
+                                    </div>
+                                </div>
+                                <div class="verification-experiments-list" id="level-c-experiments"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                ` : ''}
+
+                <div class="detail-section">
+                    <div class="section-title">🔗 原始内容链接</div>
+                    <div class="section-content">
+                        ${originalData.URL || displayItem.sourceUrl || displayItem.paperUrl ? `
+                            <a href="${originalData.URL || displayItem.sourceUrl || displayItem.paperUrl}" target="_blank" class="link-item">
+                                📄 论文链接: ${originalData.URL || displayItem.sourceUrl || displayItem.paperUrl}
+                            </a>
+                            <br><br>
+                        ` : ''}
+                        ${originalData.open_source_components?.code || displayItem.codeUrl || displayItem.githubUrl ? `
+                            <a href="${originalData.open_source_components?.code || displayItem.codeUrl || displayItem.githubUrl}" target="_blank" class="link-item">
+                                💻 代码库: ${originalData.open_source_components?.code || displayItem.codeUrl || displayItem.githubUrl}
+                            </a>
+                            <br><br>
+                        ` : `
+                            <a href="https://github.com/search?q=${encodeURIComponent(displayItem.name)}" target="_blank" class="link-item">
+                                💻 GitHub 代码库
+                            </a>
+                            <br><br>
+                        `}
+                        ${originalData.open_source_components?.dataset ? `
+                            <a href="${originalData.open_source_components.dataset}" target="_blank" class="link-item">
+                                📦 数据集: ${originalData.open_source_components.dataset}
+                            </a>
+                            <br><br>
+                        ` : ''}
+                        ${originalData.open_source_components?.model_weights ? `
+                            <p><strong>模型权重:</strong> ${originalData.open_source_components.model_weights}</p>
+                        ` : ''}
+                        ${originalData.hyperparameters ? `
+                            <div style="margin-top: 15px; padding: 12px; background: #f6f8fa; border-radius: 6px;">
+                                <div style="font-weight: 600; margin-bottom: 8px;">超参数配置:</div>
+                                <div style="font-size: 13px;">
+                                    ${typeof originalData.hyperparameters === 'object' ? 
+                                        Object.entries(originalData.hyperparameters).map(([key, value]) => 
+                                            `<p><strong>${key}:</strong> ${value}</p>`
+                                        ).join('') 
+                                        : `<p>${originalData.hyperparameters}</p>`
+                                    }
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            
+            // 渲染每个级别的验证实验列表
+            renderVerificationLevels(verificationByLevel, displayItem);
+            
+            // 绑定验证等级点击事件（展开/收起）
+            document.querySelectorAll('.verification-badge').forEach(badge => {
+                badge.addEventListener('click', function() {
+                    const level = this.dataset.level;
+                    const levelItem = this.closest('.verification-level-item');
+                    const experimentsList = levelItem.querySelector('.verification-experiments-list');
+                    
+                    // 切换展开/收起
+                    this.classList.toggle('expanded');
+                    experimentsList.classList.toggle('active');
+                });
+            });
+            
+            detailModal.classList.add('active');
+        }
+
+        // 渲染所有级别的验证实验列表
+        function renderVerificationLevels(verificationByLevel, currentItem) {
+            const levelDescriptions = {
+                'A': '完整实验（包含完整代码和实验细节）',
+                'B': '实验代码不全',
+                'C': '仅公布实验指标'
+            };
+            
+            const levels = ['A', 'B', 'C'];
+            
+            levels.forEach(level => {
+                const listContainer = document.getElementById(`level-${level.toLowerCase()}-experiments`);
+                const filteredPoints = verificationByLevel[level] || [];
+                
+                if (filteredPoints.length === 0) {
+                    listContainer.innerHTML = `
+                        <p style="color: #57606a; padding: 10px; font-size: 13px;">
+                            暂无${level}级验证的复现实验<br>
+                            <small style="color: #8b949e;">（${levelDescriptions[level]}）</small>
+                        </p>
+                    `;
+                } else {
+                    listContainer.innerHTML = `
+                        <div style="margin-bottom: 10px; font-size: 12px; color: #57606a;">
+                            ${levelDescriptions[level]} | 实验条件: ${currentItem.conditions}
+                        </div>
+                        ${filteredPoints.map((point, idx) => `
+                            <div class="similar-point-item" data-point-idx="${idx}">
+                                <div class="similar-point-name">${point.name}</div>
+                                <div class="similar-point-desc">
+                                    ${point.date} | ${point.cluster} | 价值: ${point.value}
+                                </div>
+                                <div style="font-size: 12px; color: #8b949e; margin-top: 4px;">
+                                    复现结果: ${point.result || '待验证'}
+                                </div>
+                                ${point.codeUrl ? `<div style="font-size: 11px; color: #0969da; margin-top: 2px;">🔗 代码: ${point.codeUrl}</div>` : ''}
+                                ${point.experimentDetails ? (() => {
+                                    const details = [];
+                                    if (point.experimentDetails.hyperparameters && point.experimentDetails.hyperparameters !== 'undefined') {
+                                        details.push(`📋 超参数: ${point.experimentDetails.hyperparameters}`);
+                                    }
+                                    if (point.experimentDetails.trainingLog && point.experimentDetails.trainingLog !== 'undefined') {
+                                        details.push(`训练日志: ${point.experimentDetails.trainingLog}`);
+                                    }
+                                    if (point.experimentDetails.hardware) {
+                                        details.push(`硬件: ${point.experimentDetails.hardware}`);
+                                    }
+                                    return details.length > 0 ? `<div style="font-size: 11px; color: #57606a; margin-top: 4px;">${details.join(' | ')}</div>` : '';
+                                })() : ''}
+                            </div>
+                        `).join('')}
+                    `;
+                    
+                    // 绑定点击事件（C级验证实验不可点击，避免嵌套）
+                    listContainer.querySelectorAll('.similar-point-item').forEach((item, idx) => {
+                        const point = filteredPoints[idx];
+                        // C级验证实验不可点击
+                        if (level === 'C') {
+                            item.style.cursor = 'default';
+                            item.style.opacity = '0.8';
+                        } else {
+                            // A和B级验证实验可以点击查看详情
+                            item.addEventListener('click', async function() {
+                                await _showDetailModalInternal(point, true);
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        // 关闭模态框
+        function closeModal() {
+            detailModal.classList.remove('active');
+            // 关闭所有级别的展开列表
+            document.querySelectorAll('.verification-experiments-list').forEach(list => {
+                list.classList.remove('active');
+            });
+            document.querySelectorAll('.verification-badge').forEach(badge => {
+                badge.classList.remove('expanded');
+            });
+        }
+
+        // 绑定关闭按钮
+        if (closeModalBtn) {
+            closeModalBtn.addEventListener('click', closeModal);
+        }
+
+        // 绑定返回按钮
+        if (backBtn) {
+            backBtn.addEventListener('click', function() {
+                if (originalItem) {
+                    _showDetailModalInternal(originalItem, false);
+                }
+            });
+        }
+
+        // 点击背景关闭
+        detailModal.addEventListener('click', function(e) {
+            if (e.target === detailModal) {
+                closeModal();
+            }
+        });
+
+        // ESC键关闭
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && detailModal.classList.contains('active')) {
+                closeModal();
+            }
+        });
+
+        // 将showDetailModal暴露到全局，供相似点点击使用
+        window.showDetailModal = function(item) {
+            // 从allData中找到完整数据
+            const fullItem = allData.find(d => d.id === item.id) || item;
+            _showDetailModalInternal(fullItem);
+        };
+
+        // 绑定形状筛选器的change事件
+        filterGeneral.addEventListener('change', updateChart);
+        filterReasoning.addEventListener('change', updateChart);
+
+        // --- 启动 ---
+        initChart();
+
+        // 响应窗口大小变化
+        window.addEventListener('resize', () => myChart.resize());
+
+    </script>
+</body>
+</html>
+

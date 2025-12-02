@@ -1,8 +1,11 @@
 {
-	"URL": "https://arxiv.org/abs/1502.05477",
+  "URL": "https://arxiv.org/abs/1502.05477",
   "method_name": "TRPO",
   "full_name": "Trust Region Policy Optimization",
   "category": "reinforcement_learning",
+  "method_type": "foundational_RL_algorithm",
+  "method_type_full": "Foundational Reinforcement Learning Algorithm",
+  "method_type_description": "通用强化学习算法，设计用于任意MDP环境（连续控制、Atari游戏等），提供理论上单调改进保证；不针对特定奖励来源，是PPO的前身算法，属于reward-agnostic的基础策略优化方法",
 
   "base_algorithm": {
     "derived_from": "natural policy gradient / conservative policy iteration (Kakade & Langford, 2002)",
@@ -14,8 +17,9 @@
   },
 
   "reward_function": {
-    "type": "rule-based",
-    "granularity": "outcome_supervision"
+    "type": "environment-defined",
+    "granularity": "step-level (MDP reward)",
+    "description": "TRPO 作为通用 RL 算法，reward 由环境定义（如 MuJoCo 物理模拟器的任务奖励、Atari 游戏分数），不预设特定 reward 来源"
   },
 
   "gradient_coefficient": {
@@ -80,5 +84,11 @@
       "policy_iteration": "无约束最大化 L 的特例"
     },
     "practical_vs_theory_gap": "理论系数 C 导致步长过小；D_KL_max 约束难以优化，改用 D̄_KL；忽略优势函数估计误差"
+  },
+
+  "llm_alignment_usage": {
+    "historical_role": "TRPO 是 PPO 的直接前身，PPO 的 clipping 机制是对 TRPO KL 约束的简化近似",
+    "direct_usage": "由于计算复杂度（需要二阶优化、共轭梯度），TRPO 较少直接用于 LLM 训练",
+    "theoretical_foundation": "TRPO 的单调改进理论为后续 LLM 对齐算法（如 PPO、DPO）提供了理论基础"
   }
 }

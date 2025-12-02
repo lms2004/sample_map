@@ -1,8 +1,11 @@
 {
-	"URL": "https://arxiv.org/abs/1502.05477",
+  "URL": "https://arxiv.org/abs/2402.03300",
   "method_name": "GRPO",
   "full_name": "Group Relative Policy Optimization",
   "category": "reinforcement_learning",
+  "method_type": "RLVR",
+  "method_type_full": "Reinforcement Learning with Verifiable Rewards",
+  "method_type_description": "使用可程序化验证的奖励信号（如数学题答案正确性）进行训练，奖励函数基于规则判定而非人类偏好标注，适用于有明确正确答案的任务",
 
   "base_algorithm": {
     "derived_from": "PPO (Proximal Policy Optimization)",
@@ -14,8 +17,9 @@
   },
 
   "reward_function": {
-    "type": "model-based",
-    "granularity": ["outcome_supervision", "process_supervision"]
+    "type": "rule-based / model-based",
+    "granularity": ["outcome_supervision", "process_supervision"],
+    "verification_method": "数学题答案正确性验证（rule-based）或过程奖励模型评分（model-based PRM）"
   },
 
   "gradient_coefficient": {

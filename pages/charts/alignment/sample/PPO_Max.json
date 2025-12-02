@@ -1,8 +1,11 @@
 {
-	"URL": "https://arxiv.org/abs/1502.05477",
+  "URL": "https://arxiv.org/abs/2307.04964",
   "method_name": "PPO-max",
   "full_name": "Proximal Policy Optimization Maximum (an advanced version of PPO for RLHF)",
   "category": "reinforcement_learning",
+  "method_type": "RLHF",
+  "method_type_full": "Reinforcement Learning from Human Feedback",
+  "method_type_description": "使用人类偏好标注训练的奖励模型(reward model)提供奖励信号，通过PPO算法优化策略模型以对齐人类偏好，属于经典RLHF流程的工程优化版本",
 
   "base_algorithm": {
     "derived_from": "PPO (Proximal Policy Optimization)",
@@ -10,12 +13,15 @@
   },
 
   "data_source": {
-    "sampling_strategy": "online"
+    "sampling_strategy": "online",
+    "preference_data": "人类标注的偏好对比数据，用于训练 reward model"
   },
 
   "reward_function": {
     "type": "model-based",
-    "granularity": "outcome_supervision"
+    "granularity": "outcome_supervision",
+    "reward_model_training": "使用人类偏好比较数据 (y_w ≻ y_l) 通过 Bradley-Terry 模型训练",
+    "description": "Reward model 基于人类偏好学习，对生成的完整响应打分"
   },
 
   "gradient_coefficient": null,

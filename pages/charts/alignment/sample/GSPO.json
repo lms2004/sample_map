@@ -1,8 +1,11 @@
 {
-	"URL": "https://arxiv.org/abs/1502.05477",
+  "URL": "https://arxiv.org/abs/2505.09388",
   "method_name": "GSPO",
   "full_name": "Group Sequence Policy Optimization",
   "category": "reinforcement_learning",
+  "method_type": "RLVR",
+  "method_type_full": "Reinforcement Learning with Verifiable Rewards",
+  "method_type_description": "使用可程序化验证的奖励信号进行强化学习训练，数学任务通过 accuracy verifier 验证答案正确性，代码任务通过执行服务器验证程序输出，奖励函数基于规则判定而非人类偏好标注",
 
   "base_algorithm": {
     "derived_from": ["GRPO", "PPO"],
@@ -20,7 +23,12 @@
       "coding": "code execution server (rule-based)",
       "general": "general reward model (model-based)"
     },
-    "granularity": "outcome_supervision"
+    "granularity": "outcome_supervision",
+    "verification_method": {
+      "math": "答案正确性自动验证",
+      "coding": "代码执行结果与预期输出比对",
+      "general": "通用奖励模型评分（用于 Stage 2）"
+    }
   },
 
   "gradient_coefficient": {
@@ -32,8 +40,8 @@
   "training_paradigm": {
     "iterative": true,
     "stages": [
-      "Stage 1: RL scaling for math and coding tasks",
-      "Stage 2: RL for general capabilities (instruction following, alignment, agent performance)"
+      "Stage 1: RL scaling for math and coding tasks (RLVR)",
+      "Stage 2: RL for general capabilities - instruction following, alignment, agent performance (部分 RLHF)"
     ],
     "reference_model_update": "使用 old policy πθold，具体更新频率未明确说明",
     "reward_model_update": null

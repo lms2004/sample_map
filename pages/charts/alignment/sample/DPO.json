@@ -1,8 +1,11 @@
 {
-	"URL": "https://arxiv.org/abs/1502.05477",
+  "URL": "https://arxiv.org/abs/2305.18290",
   "method_name": "DPO",
   "full_name": "Direct Preference Optimization",
   "category": "preference_optimization",
+  "method_type": "RLHF",
+  "method_type_full": "Reinforcement Learning from Human Feedback",
+  "method_type_description": "使用人类标注的偏好数据(y_w ≻ y_l)进行训练，虽然算法形式上绕过了显式的RL优化过程，但本质上是RLHF框架的数学等价变换，通过隐式奖励函数实现人类偏好对齐",
 
   "base_algorithm": {
     "derived_from": "RLHF (Bradley-Terry preference model + KL-constrained reward maximization)",
