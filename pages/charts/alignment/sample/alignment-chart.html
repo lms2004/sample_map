@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>大模型对齐技术演进图谱 (Data Driven)</title>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
-    <link rel="stylesheet" href="../../../styles/map-theme.css">
+    <link rel="stylesheet" href="../../../../styles/map-theme.css">
     <style>
         .chart-wrapper {
             position: relative;
@@ -479,14 +479,17 @@
             // 从sample目录加载所有JSON文件
             sampleDir: './',
             colors: {
+                // 主要基于 method_type 字段
                 'RLHF': '#e3b341',
                 'RLVR': '#58a6ff',
                 'RLAIF': '#f85149',
                 'Direct Alignment': '#3fb950',
                 'SFT / Distillation': '#a371f7',
                 'PRM': '#ffb6c1',
+                // 如果没有 method_type，回退到 category
                 'reinforcement_learning': '#e3b341',
-                'preference_optimization': '#3fb950'
+                'preference_optimization': '#3fb950',
+                'Unknown': '#888888'
             },
             shapes: {
                 'general': 'circle',
@@ -641,8 +644,10 @@
             let skippedCount = 0;
 
             filteredData.forEach(item => {
-                if (!seriesGroups[item.cluster]) {
-                    seriesGroups[item.cluster] = [];
+                // 确保cluster存在，如果不存在则使用'Unknown'
+                const cluster = item.cluster || 'Unknown';
+                if (!seriesGroups[cluster]) {
+                    seriesGroups[cluster] = [];
                 }
 
                 const dateValue = item.date;
@@ -654,7 +659,7 @@
                     return;
                 }
 
-                seriesGroups[item.cluster].push({
+                seriesGroups[cluster].push({
                     name: item.name,
                     value: [dateValue, valueNum],
                     symbol: CONFIG.shapes[item.domain] || 'circle',
@@ -787,14 +792,39 @@
 
         // 转换新JSON格式到图表格式
         function transformNewJsonFormat(jsonData, fileName) {
-            // 从文件名提取日期（如果有的话），否则使用当前日期
-            const dateMatch = fileName.match(/(\d{4})[-_](\d{2})[-_](\d{2})/);
-            const defaultDate = dateMatch 
-                ? `${dateMatch[1]}-${dateMatch[2]}-${dateMatch[3]}`
-                : new Date().toISOString().split('T')[0];
+            // 优先从URL提取日期
+            let defaultDate = new Date().toISOString().split('T')[0];
             
-            // 确定分组（优先使用method_type，否则使用category）
+            if (jsonData.URL) {
+                // arXiv URL格式：https://arxiv.org/abs/YYMM.NNNNN
+                // 例如：1502.05477 -> 2015年2月, 2307.04964 -> 2023年7月
+                const arxivMatch = jsonData.URL.match(/arxiv\.org\/abs\/(\d{4})\.(\d+)/);
+                if (arxivMatch) {
+                    const idPart = arxivMatch[1]; // YYMM格式
+                    const yy = parseInt(idPart.substring(0, 2));
+                    const mm = idPart.substring(2, 4);
+                    
+                    // 判断年份：如果YY < 50，认为是20xx年，否则是19xx年
+                    const year = yy < 50 ? `20${idPart.substring(0, 2)}` : `19${idPart.substring(0, 2)}`;
+                    defaultDate = `${year}-${mm}-01`;
+                }
+            }
+            
+            // 如果URL中没有找到，尝试从文件名提取日期
+            if (defaultDate === new Date().toISOString().split('T')[0]) {
+                const dateMatch = fileName.match(/(\d{4})[-_](\d{2})[-_](\d{2})/);
+                if (dateMatch) {
+                    defaultDate = `${dateMatch[1]}-${dateMatch[2]}-${dateMatch[3]}`;
+                }
+            }
+            
+            // 确定分组（主要基于method_type字段）
             const cluster = jsonData.method_type || jsonData.category || 'Unknown';
+            
+            // 如果没有method_type但有category，尝试从category推断method_type
+            if (!jsonData.method_type && jsonData.category) {
+                // 可以根据category做映射，但优先保持method_type为空时的处理
+            }
             
             // 确定领域（从category或其他字段推断）
             let domain = 'general';
@@ -902,24 +932,30 @@
                     transformNewJsonFormat(data, fileName)
                 );
                 
-                // 加载验证实验数据（从同目录加载）
+                // 加载验证实验数据（从同目录加载，可选文件，不存在时静默忽略）
                 try {
                     const verificationResponse = await fetch(`verification-data.json?v=${Date.now()}`);
                     if (verificationResponse.ok) {
                         verificationData = await verificationResponse.json();
+                    } else {
+                        verificationData = {}; // 文件不存在时使用空对象
                     }
                 } catch (e) {
-                    console.warn('验证实验数据加载失败，将使用模拟数据:', e);
+                    // 网络错误时静默忽略
+                    verificationData = {};
                 }
                 
-                // 加载评论数据（从同目录加载）
+                // 加载评论数据（从同目录加载，可选文件，不存在时静默忽略）
                 try {
                     const commentsResponse = await fetch(`comments-data.json?v=${Date.now()}`);
                     if (commentsResponse.ok) {
                         commentsData = await commentsResponse.json();
+                    } else {
+                        commentsData = {}; // 文件不存在时使用空对象
                     }
                 } catch (e) {
-                    console.warn('评论数据加载失败:', e);
+                    // 网络错误时静默忽略
+                    commentsData = {};
                 }
 
                 // 使用过滤函数更新图表
